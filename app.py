@@ -20,129 +20,420 @@ st.set_page_config(
 # Design System
 # ---------------------------------------------------------------------------
 ZOMATO_RED = "#E23744"
+ZOMATO_RED_LIGHT = "#FF6B6B"
 CHARCOAL = "#1C1C1C"
 LIGHT_BG = "#F8F9FA"
 CARD_BG = "#FFFFFF"
-MUTED_TEXT = "#6C757D"
+MUTED = "#6C757D"
+SUCCESS = "#28A745"
+WARNING_CLR = "#FFC107"
 
-PLOTLY_TEMPLATE = dict(
-    layout=go.Layout(
-        font=dict(family="Inter, sans-serif", color=CHARCOAL),
-        paper_bgcolor="rgba(0,0,0,0)",
-        plot_bgcolor="rgba(0,0,0,0)",
-        colorway=[ZOMATO_RED, "#2D2D2D", "#FF6B6B", "#4ECDC4", "#45B7D1", "#96CEB4"],
-    )
+PLOTLY_LAYOUT = dict(
+    font=dict(family="Inter, -apple-system, sans-serif", color="#E0E0E0", size=12),
+    paper_bgcolor="rgba(0,0,0,0)",
+    plot_bgcolor="rgba(0,0,0,0)",
+    colorway=[ZOMATO_RED, "#4ECDC4", "#FF6B6B", "#45B7D1", "#96CEB4", "#FFEAA7", "#DDA0DD"],
+    margin=dict(l=40, r=24, t=48, b=32),
+    legend=dict(
+        bgcolor="rgba(0,0,0,0)",
+        borderwidth=0,
+        font=dict(size=11),
+    ),
+    xaxis=dict(gridcolor="rgba(255,255,255,0.06)", zerolinecolor="rgba(255,255,255,0.06)"),
+    yaxis=dict(gridcolor="rgba(255,255,255,0.06)", zerolinecolor="rgba(255,255,255,0.06)"),
 )
 
 st.markdown("""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+
+:root {
+    --red: #E23744;
+    --red-glow: rgba(226,55,68,0.15);
+    --card: rgba(255,255,255,0.04);
+    --card-border: rgba(255,255,255,0.08);
+    --card-hover: rgba(255,255,255,0.07);
+    --text-primary: #F0F0F0;
+    --text-secondary: #9CA3AF;
+    --text-muted: #6B7280;
+    --surface: #0E1117;
+    --green: #10B981;
+    --amber: #F59E0B;
+}
 
 html, body, [class*="css"] {
-    font-family: 'Inter', sans-serif;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
 }
+
+/* Layout */
 .main .block-container {
-    padding-top: 2rem;
-    max-width: 1200px;
+    padding: 1.5rem 2rem 3rem 2rem;
+    max-width: 1280px;
 }
+section[data-testid="stSidebar"] {
+    background: linear-gradient(180deg, #0a0a0a 0%, #111318 100%);
+    border-right: 1px solid rgba(255,255,255,0.06);
+}
+section[data-testid="stSidebar"] .block-container {
+    padding-top: 1.5rem;
+}
+
+/* Tabs */
 .stTabs [data-baseweb="tab-list"] {
-    gap: 8px;
+    gap: 0;
+    background: var(--card);
+    border-radius: 12px;
+    padding: 4px;
+    border: 1px solid var(--card-border);
 }
 .stTabs [data-baseweb="tab"] {
-    height: 48px;
-    border-radius: 8px 8px 0 0;
-    padding: 0 24px;
+    height: 44px;
+    border-radius: 10px;
+    padding: 0 20px;
     font-weight: 600;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    background: transparent;
+    border: none;
 }
 .stTabs [aria-selected="true"] {
-    background-color: #E23744 !important;
+    background: var(--red) !important;
     color: white !important;
+    box-shadow: 0 2px 12px rgba(226,55,68,0.35);
 }
+.stTabs [data-baseweb="tab-highlight"] {
+    display: none;
+}
+.stTabs [data-baseweb="tab-border"] {
+    display: none;
+}
+
+/* Metric cards */
 div[data-testid="stMetric"] {
-    background: white;
-    border: 1px solid #E8E8E8;
+    background: var(--card);
+    border: 1px solid var(--card-border);
     border-radius: 12px;
-    padding: 16px 20px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    padding: 20px;
+    transition: all 0.25s cubic-bezier(.4,0,.2,1);
 }
 div[data-testid="stMetric"]:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 16px rgba(226,55,68,0.12);
+    background: var(--card-hover);
+    border-color: rgba(226,55,68,0.3);
+    transform: translateY(-1px);
+    box-shadow: 0 8px 24px rgba(226,55,68,0.08);
 }
 div[data-testid="stMetric"] label {
-    color: #6C757D !important;
-    font-weight: 500;
-    font-size: 0.8rem;
+    color: var(--text-muted) !important;
+    font-weight: 600;
+    font-size: 0.7rem !important;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+}
+div[data-testid="stMetric"] [data-testid="stMetricValue"] {
+    color: var(--text-primary) !important;
+    font-weight: 700;
+    font-size: 1.6rem !important;
+}
+div[data-testid="stMetric"] [data-testid="stMetricDelta"] {
+    font-size: 0.8rem !important;
+}
+
+/* Hero */
+.hero {
+    background: linear-gradient(135deg, #E23744 0%, #B91C28 60%, #8B1520 100%);
+    color: white;
+    padding: 36px 44px;
+    border-radius: 16px;
+    margin-bottom: 28px;
+    position: relative;
+    overflow: hidden;
+}
+.hero::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -20%;
+    width: 400px;
+    height: 400px;
+    background: radial-gradient(circle, rgba(255,255,255,0.08) 0%, transparent 70%);
+    border-radius: 50%;
+}
+.hero h1 {
+    margin: 0;
+    font-size: 2rem;
+    font-weight: 900;
+    letter-spacing: -0.5px;
+    position: relative;
+}
+.hero .subtitle {
+    margin: 6px 0 0 0;
+    opacity: 0.85;
+    font-size: 0.95rem;
+    font-weight: 400;
+    position: relative;
+}
+.hero .hero-stats {
+    display: flex;
+    gap: 32px;
+    margin-top: 20px;
+    position: relative;
+}
+.hero .hero-stat {
+    display: flex;
+    flex-direction: column;
+}
+.hero .hero-stat-val {
+    font-size: 1.3rem;
+    font-weight: 800;
+}
+.hero .hero-stat-label {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    opacity: 0.7;
+    margin-top: 2px;
+}
+
+/* Section headers */
+.section-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 8px 0 20px 0;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--card-border);
+}
+.section-header h3 {
+    margin: 0;
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+.section-header .badge {
+    background: var(--red);
+    color: white;
+    font-size: 0.65rem;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 20px;
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
-div[data-testid="stMetric"] [data-testid="stMetricValue"] {
-    color: #1C1C1C;
+
+/* Hypothesis cards */
+.hyp-card {
+    background: rgba(226,55,68,0.06);
+    border: 1px solid rgba(226,55,68,0.15);
+    border-left: 3px solid var(--red);
+    padding: 14px 18px;
+    border-radius: 0 10px 10px 0;
+    margin-bottom: 10px;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    color: var(--text-primary);
+}
+.hyp-card .hyp-label {
+    color: var(--red);
     font-weight: 700;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
 }
-.hero-header {
-    background: linear-gradient(135deg, #E23744 0%, #C62828 100%);
-    color: white;
-    padding: 32px 40px;
-    border-radius: 16px;
-    margin-bottom: 24px;
-}
-.hero-header h1 {
-    margin: 0;
-    font-size: 2rem;
-    font-weight: 800;
-}
-.hero-header p {
-    margin: 8px 0 0 0;
-    opacity: 0.9;
-    font-size: 1rem;
-}
-.hypothesis-card {
-    background: #FFF5F5;
-    border-left: 4px solid #E23744;
-    padding: 16px 20px;
-    border-radius: 0 12px 12px 0;
-    margin-bottom: 12px;
-}
-.hypothesis-card strong {
-    color: #E23744;
-}
-.stat-badge-sig {
-    background: #D4EDDA;
-    color: #155724;
-    padding: 4px 12px;
-    border-radius: 20px;
-    font-weight: 600;
-    font-size: 0.85rem;
+
+/* Stat badges */
+.badge-sig {
+    background: rgba(16,185,129,0.12);
+    color: #34D399;
+    border: 1px solid rgba(16,185,129,0.25);
+    padding: 6px 14px;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 0.82rem;
     display: inline-block;
 }
-.stat-badge-notsig {
-    background: #F8D7DA;
-    color: #721C24;
-    padding: 4px 12px;
-    border-radius: 20px;
-    font-weight: 600;
-    font-size: 0.85rem;
+.badge-notsig {
+    background: rgba(239,68,68,0.12);
+    color: #F87171;
+    border: 1px solid rgba(239,68,68,0.25);
+    padding: 6px 14px;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 0.82rem;
     display: inline-block;
 }
+
+/* SRM Alert */
 .srm-alert {
-    background: #F8D7DA;
-    border: 2px solid #E23744;
-    padding: 16px;
+    background: rgba(239,68,68,0.1);
+    border: 2px solid rgba(239,68,68,0.4);
+    padding: 18px 24px;
     border-radius: 12px;
-    color: #721C24;
+    color: #FCA5A5;
     font-weight: 600;
     text-align: center;
+    font-size: 0.9rem;
 }
-.schema-box {
-    background: #1C1C1C;
-    color: #00FF88;
-    padding: 16px;
+
+/* Stat card panel */
+.stat-panel {
+    background: var(--card);
+    border: 1px solid var(--card-border);
     border-radius: 12px;
-    font-family: 'JetBrains Mono', monospace;
+    padding: 20px 24px;
+}
+.stat-panel h4 {
+    margin: 0 0 16px 0;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.stat-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    font-size: 0.88rem;
+}
+.stat-row:last-child {
+    border-bottom: none;
+}
+.stat-row .label {
+    color: var(--text-secondary);
+}
+.stat-row .value {
+    color: var(--text-primary);
+    font-weight: 600;
+    font-family: 'JetBrains Mono', 'SF Mono', monospace;
+}
+
+/* Schema box */
+.schema-container {
+    background: rgba(0,0,0,0.3);
+    border: 1px solid var(--card-border);
+    border-radius: 12px;
+    padding: 20px 24px;
+    font-family: 'JetBrains Mono', 'SF Mono', 'Cascadia Code', monospace;
+    font-size: 0.78rem;
+    line-height: 1.8;
+}
+.schema-container .tbl-name {
+    color: var(--red);
+    font-weight: 700;
+}
+.schema-container .col-pk {
+    color: #FBBF24;
+}
+.schema-container .col-fk {
+    color: #60A5FA;
+}
+.schema-container .col-name {
+    color: #A5F3FC;
+}
+.schema-container .col-type {
+    color: var(--text-muted);
+}
+.schema-container .section-label {
+    color: var(--text-muted);
+    font-style: italic;
+    margin-top: 8px;
+    display: block;
+}
+.schema-container .enum-val {
+    color: #86EFAC;
+}
+
+/* Friction bar */
+.friction-bar {
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: 12px;
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 8px;
+}
+.friction-bar .step-label {
+    color: var(--text-secondary);
     font-size: 0.8rem;
-    line-height: 1.6;
+    font-weight: 600;
+    min-width: 170px;
+}
+.friction-bar .bar-track {
+    flex: 1;
+    height: 8px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 4px;
+    overflow: hidden;
+}
+.friction-bar .bar-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.5s ease;
+}
+.friction-bar .pct {
+    color: var(--text-primary);
+    font-weight: 700;
+    font-size: 0.88rem;
+    min-width: 60px;
+    text-align: right;
+    font-family: 'JetBrains Mono', monospace;
+}
+.friction-bar .time {
+    color: var(--text-muted);
+    font-size: 0.78rem;
+    min-width: 70px;
+    text-align: right;
+}
+
+/* Sidebar extras */
+.sidebar-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 4px;
+}
+.sidebar-brand .logo-text {
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: var(--red);
+    letter-spacing: -0.3px;
+}
+.sidebar-about {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    line-height: 1.5;
+    margin-bottom: 16px;
+}
+
+/* Footer */
+.footer {
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.78rem;
+    padding: 24px 0 0 0;
+    border-top: 1px solid var(--card-border);
+    margin-top: 40px;
+}
+.footer a {
+    color: var(--red);
+    text-decoration: none;
+}
+
+/* Misc */
+.stSelectbox label, .stMultiSelect label, .stRadio label, .stTextArea label {
+    font-weight: 600 !important;
+    font-size: 0.82rem !important;
+    color: var(--text-secondary) !important;
+}
+div[data-testid="stExpander"] {
+    border: 1px solid var(--card-border);
+    border-radius: 12px;
+    background: var(--card);
 }
 </style>
 """, unsafe_allow_html=True)
@@ -217,16 +508,11 @@ def init_database():
         "cart_added", "checkout_initiated", "payment_completed"
     ]
 
-    # Cumulative funnel rates (fraction of all sessions reaching each step)
-    # Control: ~8% end-to-end, Treatment: ~11%
     control_cum = [1.0, 0.72, 0.58, 0.38, 0.22, 0.08]
     treatment_cum = [1.0, 0.75, 0.62, 0.43, 0.28, 0.11]
 
     def cum_to_conditional(cum):
         return [cum[0]] + [cum[i] / cum[i-1] if cum[i-1] > 0 else 0 for i in range(1, len(cum))]
-
-    control_probs = cum_to_conditional(control_cum)
-    treatment_probs = cum_to_conditional(treatment_cum)
 
     n_sessions = 50000
     sessions_data = []
@@ -248,11 +534,9 @@ def init_database():
 
         cum = list(control_cum if variant == "Control" else treatment_cum)
 
-        # Device modifier (applied to cumulative rates before converting)
         if dev == "Web":
             cum = [cum[0]] + [c * 0.85 for c in cum[1:]]
 
-        # Segment modifier
         seg = user_segments[uid]
         if seg == "Power User":
             cum = [min(1.0, c * 1.15) for c in cum]
@@ -297,28 +581,59 @@ conn = init_database()
 
 def run_query(query):
     try:
-        df = pd.read_sql_query(query, conn)
-        return df, None
+        return pd.read_sql_query(query, conn), None
     except Exception as e:
         return None, str(e)
 
 
+def safe_div(a, b, default=0):
+    return a / b if b else default
+
+
 # ---------------------------------------------------------------------------
-# Header
+# Hero Header
 # ---------------------------------------------------------------------------
-st.markdown("""
-<div class="hero-header">
-    <h1>🍽️ BiteMetrics</h1>
-    <p>Zomato Order Funnel & A/B Testing Simulator — Interactive Product Analytics Dashboard</p>
+hero_stats, _ = run_query("""
+    SELECT
+        (SELECT COUNT(DISTINCT user_id) FROM users) as users,
+        (SELECT COUNT(*) FROM sessions) as sessions,
+        (SELECT COUNT(*) FROM orders) as orders,
+        (SELECT ROUND(AVG(order_value),0) FROM orders) as aov
+""")
+u_count = f"{hero_stats['users'].iloc[0]:,}" if hero_stats is not None else "—"
+s_count = f"{hero_stats['sessions'].iloc[0]:,}" if hero_stats is not None else "—"
+o_count = f"{hero_stats['orders'].iloc[0]:,}" if hero_stats is not None else "—"
+aov_val = f"₹{hero_stats['aov'].iloc[0]:.0f}" if hero_stats is not None else "—"
+
+st.markdown(f"""
+<div class="hero">
+    <h1>BiteMetrics</h1>
+    <p class="subtitle">Zomato Order Funnel & A/B Testing Simulator — Interactive Product Analytics Dashboard</p>
+    <div class="hero-stats">
+        <div class="hero-stat"><span class="hero-stat-val">{u_count}</span><span class="hero-stat-label">Users</span></div>
+        <div class="hero-stat"><span class="hero-stat-val">{s_count}</span><span class="hero-stat-label">Sessions</span></div>
+        <div class="hero-stat"><span class="hero-stat-val">{o_count}</span><span class="hero-stat-label">Orders</span></div>
+        <div class="hero-stat"><span class="hero-stat-val">{aov_val}</span><span class="hero-stat-label">Avg Order Value</span></div>
+    </div>
 </div>
 """, unsafe_allow_html=True)
 
 # ---------------------------------------------------------------------------
-# Sidebar Filters
+# Sidebar
 # ---------------------------------------------------------------------------
 with st.sidebar:
-    st.markdown("### 🎛️ Global Filters")
-    st.markdown("---")
+    st.markdown("""
+    <div class="sidebar-brand"><span class="logo-text">BiteMetrics</span></div>
+    """, unsafe_allow_html=True)
+    st.markdown("""
+    <p class="sidebar-about">
+        A production-grade product analytics simulator modelling Zomato's order funnel,
+        A/B experimentation, cohort retention, and a live SQL sandbox.
+        Built with Streamlit, Plotly, and SQLite.
+    </p>
+    """, unsafe_allow_html=True)
+
+    st.markdown("#### Filters")
 
     all_devices = ["iOS", "Android", "Web"]
     selected_devices = st.multiselect("Device Type", all_devices, default=all_devices)
@@ -330,177 +645,218 @@ with st.sidebar:
     selected_channels = st.multiselect("Acquisition Channel", all_channels, default=all_channels)
 
     st.markdown("---")
-    st.markdown("##### 📊 Data Summary")
-    summary, _ = run_query("SELECT COUNT(DISTINCT user_id) as users, COUNT(DISTINCT session_id) as sessions FROM sessions")
-    if summary is not None:
-        st.metric("Total Users", f"{summary['users'].iloc[0]:,}")
-        st.metric("Total Sessions", f"{summary['sessions'].iloc[0]:,}")
-
-    order_count, _ = run_query("SELECT COUNT(*) as cnt FROM orders")
-    if order_count is not None:
-        st.metric("Total Orders", f"{order_count['cnt'].iloc[0]:,}")
+    st.caption("45-day simulation window  \nJun 1 – Jul 15, 2026")
 
 
 def check_filters():
     if not selected_devices or not selected_segments or not selected_channels:
-        st.warning("⚠️ Please select at least one option in each filter to visualize data.")
+        st.warning("Please select at least one option in each filter to visualize data.")
         return False
     return True
 
 
-def get_filter_clause(device_col="s.device", user_table_prefix="u"):
+def get_filter_clause(device_col="s.device", user_prefix="u"):
     devs = ",".join([f"'{d}'" for d in selected_devices])
     segs = ",".join([f"'{s}'" for s in selected_segments])
     chs = ",".join([f"'{c}'" for c in selected_channels])
-    return f"""
-        {device_col} IN ({devs})
-        AND {user_table_prefix}.segment IN ({segs})
-        AND {user_table_prefix}.acquisition_channel IN ({chs})
-    """
+    return f"{device_col} IN ({devs}) AND {user_prefix}.segment IN ({segs}) AND {user_prefix}.acquisition_channel IN ({chs})"
+
+
+def make_plotly_layout(**overrides):
+    base = dict(PLOTLY_LAYOUT)
+    base.update(overrides)
+    return base
 
 
 # ---------------------------------------------------------------------------
 # Tabs
 # ---------------------------------------------------------------------------
 tab1, tab2, tab3, tab4 = st.tabs([
-    "🔍 Funnel Analysis",
-    "🧪 A/B Testing Engine",
-    "📈 Cohort Retention",
-    "💻 SQL Sandbox"
+    "Funnel Analysis",
+    "A/B Testing Engine",
+    "Cohort Retention",
+    "SQL Sandbox"
 ])
 
+FUNNEL_STEPS = ["app_open", "search_executed", "restaurant_viewed",
+                "cart_added", "checkout_initiated", "payment_completed"]
+STEP_LABELS = ["App Open", "Search", "Restaurant View",
+               "Cart Added", "Checkout", "Payment"]
+
 # ---------------------------------------------------------------------------
-# Tab 1: Funnel Drop-off & Friction Analysis
+# Tab 1: Funnel
 # ---------------------------------------------------------------------------
 with tab1:
     if check_filters():
-        st.markdown("### Conversion Funnel Drop-off Analysis")
-
-        slice_by = st.selectbox(
-            "Segment funnel by:",
-            ["Overall", "Device Type", "User Segment", "Acquisition Channel"],
-            key="funnel_slicer"
-        )
+        st.markdown('<div class="section-header"><h3>Conversion Funnel & Friction Analysis</h3><span class="badge">Live</span></div>', unsafe_allow_html=True)
 
         filter_clause = get_filter_clause()
 
-        funnel_steps = ["app_open", "search_executed", "restaurant_viewed",
-                        "cart_added", "checkout_initiated", "payment_completed"]
-        step_labels = ["App Open", "Search", "Restaurant View",
-                       "Cart Added", "Checkout", "Payment"]
+        col_slicer, col_spacer = st.columns([1, 2])
+        with col_slicer:
+            slice_by = st.selectbox(
+                "Segment by",
+                ["Overall", "Device Type", "User Segment", "Acquisition Channel"],
+                key="funnel_slicer"
+            )
 
         if slice_by == "Overall":
-            funnel_query = f"""
+            funnel_df, _ = run_query(f"""
                 SELECT e.event_name, COUNT(DISTINCT e.session_id) as sessions
                 FROM events e
                 JOIN sessions s ON e.session_id = s.session_id
                 JOIN users u ON s.user_id = u.user_id
                 WHERE {filter_clause}
                 GROUP BY e.event_name
-            """
-            funnel_df, err = run_query(funnel_query)
+            """)
             if funnel_df is not None and not funnel_df.empty:
                 counts = []
-                for step in funnel_steps:
+                for step in FUNNEL_STEPS:
                     row = funnel_df[funnel_df["event_name"] == step]
-                    counts.append(row["sessions"].iloc[0] if not row.empty else 0)
+                    counts.append(int(row["sessions"].iloc[0]) if not row.empty else 0)
 
                 fig = go.Figure(go.Funnel(
-                    y=step_labels,
+                    y=STEP_LABELS,
                     x=counts,
                     textinfo="value+percent initial+percent previous",
-                    marker=dict(color=[ZOMATO_RED, "#FF6B6B", "#FF8A80", "#FFAB91", "#FFCC80", "#4ECDC4"]),
-                    connector=dict(line=dict(color="#E8E8E8", width=2))
+                    textfont=dict(size=12),
+                    marker=dict(
+                        color=["#E23744", "#E8434F", "#EF6B73", "#F49098", "#F9B5BC", "#4ECDC4"],
+                        line=dict(width=0),
+                    ),
+                    connector=dict(line=dict(color="rgba(255,255,255,0.08)", width=1))
                 ))
                 fig.update_layout(
-                    template=PLOTLY_TEMPLATE,
-                    height=500,
-                    margin=dict(l=20, r=20, t=40, b=20),
-                    title=dict(text="Order Funnel — All Sessions", font=dict(size=16))
+                    **make_plotly_layout(height=420),
+                    title=dict(text="Order Funnel — All Sessions", font=dict(size=14, color="#E0E0E0")),
+                    funnelmode="stack",
                 )
                 st.plotly_chart(fig, use_container_width=True)
 
-                # Drop-off metrics
-                st.markdown("#### 📉 Step-by-Step Drop-off Rates")
-                cols = st.columns(5)
-                for i in range(1, len(counts)):
-                    if counts[i-1] > 0:
-                        dropoff = (1 - counts[i] / counts[i-1]) * 100
-                    else:
-                        dropoff = 0
-                    cols[i-1].metric(
-                        f"{step_labels[i-1]} → {step_labels[i]}",
-                        f"{dropoff:.1f}% drop",
-                        delta=f"-{counts[i-1] - counts[i]:,} sessions",
-                        delta_color="inverse"
-                    )
+                # Drop-off friction bars with time between stages
+                st.markdown('<div class="section-header"><h3>Step-by-Step Friction Map</h3></div>', unsafe_allow_html=True)
 
-                # Time between stages
-                st.markdown("#### ⏱️ Average Time Between Stages (minutes)")
-                time_query = f"""
+                time_df, _ = run_query(f"""
+                    WITH ordered_events AS (
+                        SELECT e.session_id, e.event_name, e.timestamp,
+                            ROW_NUMBER() OVER (PARTITION BY e.session_id ORDER BY e.timestamp) as rn
+                        FROM events e
+                        JOIN sessions s ON e.session_id = s.session_id
+                        JOIN users u ON s.user_id = u.user_id
+                        WHERE {filter_clause}
+                    )
                     SELECT e1.event_name as from_step, e2.event_name as to_step,
                         AVG((JULIANDAY(e2.timestamp) - JULIANDAY(e1.timestamp)) * 1440) as avg_mins
-                    FROM events e1
-                    JOIN events e2 ON e1.session_id = e2.session_id
-                    JOIN sessions s ON e1.session_id = s.session_id
-                    JOIN users u ON s.user_id = u.user_id
-                    WHERE {filter_clause}
-                    AND e1.event_name = 'checkout_initiated'
-                    AND e2.event_name = 'payment_completed'
+                    FROM ordered_events e1
+                    JOIN ordered_events e2 ON e1.session_id = e2.session_id AND e2.rn = e1.rn + 1
                     GROUP BY e1.event_name, e2.event_name
-                """
-                time_df, _ = run_query(time_query)
-                if time_df is not None and not time_df.empty:
-                    avg_payment_time = time_df["avg_mins"].iloc[0]
-                    st.info(f"🕐 **Checkout → Payment avg time: {avg_payment_time:.1f} min** — "
-                            f"{'⚠️ High friction detected!' if avg_payment_time > 3 else '✅ Acceptable latency.'}")
+                """)
+                time_map = {}
+                if time_df is not None:
+                    for _, r in time_df.iterrows():
+                        time_map[(r["from_step"], r["to_step"])] = r["avg_mins"]
+
+                max_dropoff_rate = 0
+                max_dropoff_idx = 1
+                for i in range(1, len(counts)):
+                    dropoff_pct = (1 - safe_div(counts[i], counts[i-1])) * 100
+                    from_step = FUNNEL_STEPS[i-1]
+                    to_step = FUNNEL_STEPS[i]
+                    avg_time = time_map.get((from_step, to_step), None)
+                    time_str = f"{avg_time:.1f} min" if avg_time is not None else "—"
+
+                    bar_color = ZOMATO_RED if dropoff_pct > 50 else ("#F59E0B" if dropoff_pct > 30 else "#10B981")
+
+                    st.markdown(f"""
+                    <div class="friction-bar">
+                        <span class="step-label">{STEP_LABELS[i-1]} → {STEP_LABELS[i]}</span>
+                        <div class="bar-track">
+                            <div class="bar-fill" style="width: {dropoff_pct}%; background: {bar_color};"></div>
+                        </div>
+                        <span class="pct" style="color: {bar_color};">{dropoff_pct:.1f}%</span>
+                        <span class="time">{time_str}</span>
+                    </div>
+                    """, unsafe_allow_html=True)
+
+                    if dropoff_pct > max_dropoff_rate:
+                        max_dropoff_rate = dropoff_pct
+                        max_dropoff_idx = i
+
+                # Daily conversion trend
+                st.markdown("")
+                trend_df, _ = run_query(f"""
+                    SELECT s.date,
+                        COUNT(DISTINCT s.session_id) as sessions,
+                        COUNT(DISTINCT CASE WHEN e.event_name='payment_completed' THEN s.session_id END) as conversions
+                    FROM sessions s
+                    JOIN users u ON s.user_id = u.user_id
+                    LEFT JOIN events e ON s.session_id = e.session_id AND e.event_name = 'payment_completed'
+                    WHERE {filter_clause}
+                    GROUP BY s.date ORDER BY s.date
+                """)
+                if trend_df is not None and not trend_df.empty:
+                    trend_df["cr"] = trend_df["conversions"] / trend_df["sessions"] * 100
+                    fig_trend = go.Figure()
+                    fig_trend.add_trace(go.Scatter(
+                        x=trend_df["date"], y=trend_df["cr"],
+                        mode="lines",
+                        line=dict(color=ZOMATO_RED, width=2),
+                        fill="tozeroy",
+                        fillcolor="rgba(226,55,68,0.08)",
+                        name="CR %"
+                    ))
+                    fig_trend.update_layout(
+                        **make_plotly_layout(height=250),
+                        title=dict(text="Daily Conversion Rate Trend", font=dict(size=14, color="#E0E0E0")),
+                        yaxis_title="Conversion Rate %",
+                        xaxis_title="",
+                        showlegend=False,
+                    )
+                    st.plotly_chart(fig_trend, use_container_width=True)
 
                 # Hypothesis Engine
-                st.markdown("#### 💡 Product Hypothesis Engine")
-                max_dropoff_idx = 0
-                max_dropoff_rate = 0
-                for i in range(1, len(counts)):
-                    if counts[i-1] > 0:
-                        rate = 1 - counts[i] / counts[i-1]
-                        if rate > max_dropoff_rate:
-                            max_dropoff_rate = rate
-                            max_dropoff_idx = i
+                st.markdown('<div class="section-header"><h3>Product Hypothesis Engine</h3></div>', unsafe_allow_html=True)
 
-                friction_point = step_labels[max_dropoff_idx]
-                prev_point = step_labels[max_dropoff_idx - 1] if max_dropoff_idx > 0 else "Start"
+                friction_point = STEP_LABELS[max_dropoff_idx]
+                prev_point = STEP_LABELS[max_dropoff_idx - 1] if max_dropoff_idx > 0 else "Start"
 
                 hypotheses = {
                     "Search": [
-                        "Search ranking relevance may be poor — users aren't finding restaurants they want.",
-                        "Auto-suggestions may be missing for popular cuisines, causing user drop-off.",
-                        "Search latency on older devices could exceed user patience thresholds."
+                        ("Search relevance gap", "Auto-suggestions and search ranking may not surface the most relevant restaurants, especially for long-tail cuisine queries."),
+                        ("Cold start problem", "New users without order history get generic results instead of personalized recommendations."),
+                        ("Latency on low-end devices", "Search response times on Android budget devices may exceed the 300ms patience threshold."),
                     ],
                     "Restaurant View": [
-                        "Restaurant listing cards may lack social proof (ratings, photos) to drive clicks.",
-                        "High delivery fees shown upfront on listing cards may deter exploration.",
-                        "Cuisine categorization may not match user mental models."
+                        ("Missing social proof", "Listing cards lack user-generated photos and real-time popularity signals (e.g., '42 orders in the last hour')."),
+                        ("Fee transparency", "Delivery fees and minimum order values shown on listing cards may deter exploration."),
+                        ("Category mismatch", "Cuisine taxonomy may not align with how users think about food (e.g., 'healthy' vs. 'salad')."),
                     ],
                     "Cart Added": [
-                        "Menu UI complexity may overwhelm users — too many options without smart defaults.",
-                        "Missing dish-level ratings or photos reduces purchase confidence.",
-                        "Minimum order value requirements may create friction for single-item orders."
+                        ("Menu decision paralysis", "Restaurants with 100+ items and no smart defaults overwhelm users. Recommended combos could reduce cognitive load."),
+                        ("Missing dish confidence signals", "Lack of dish-level ratings, photos, and 'popular' tags reduces purchase confidence."),
+                        ("Minimum order friction", "Users wanting a single item face a ₹150+ minimum, causing drop-off at the menu stage."),
                     ],
                     "Checkout": [
-                        "Unexpected delivery fees or taxes revealed at checkout cause 'sticker shock'.",
-                        "Checkout flow has too many steps — address, payment, tip, instructions.",
-                        "Lack of a guest checkout option forces registration, increasing abandonment."
+                        ("Sticker shock", "Delivery fee + packaging + taxes revealed at checkout total 25-40% above menu price, violating price anchoring."),
+                        ("Checkout flow length", "5+ steps (address → slot → tip → instructions → payment) creates fatigue. One-tap reorder could bypass this."),
+                        ("Guest checkout absence", "Mandatory account creation forces registration, adding 30+ seconds of friction."),
                     ],
                     "Payment": [
-                        "Payment gateway timeouts are causing transaction failures.",
-                        "Limited payment options (no UPI/wallet) for the user's preferred method.",
-                        "OTP/2FA friction on card payments creates a point of no return."
+                        ("Gateway timeouts", "Payment gateway failure rates spike during peak hours (12–2pm, 7–9pm), causing abandoned carts."),
+                        ("UPI preference mismatch", "Users preferring UPI Lite or specific wallets find limited options, falling back to card + OTP flow."),
+                        ("OTP drop-off", "Card payments requiring OTP create a 15-second window where users abandon — especially on slow networks."),
                     ],
                 }
 
                 hyps = hypotheses.get(friction_point, hypotheses["Checkout"])
-                st.markdown(f"**Biggest friction: {prev_point} → {friction_point} ({max_dropoff_rate*100:.1f}% drop-off)**")
-                for h in hyps:
-                    st.markdown(f'<div class="hypothesis-card">💡 <strong>Hypothesis:</strong> {h}</div>', unsafe_allow_html=True)
+                st.markdown(f"Highest friction: **{prev_point} → {friction_point}** at **{max_dropoff_rate:.1f}% drop-off**")
+                for title, desc in hyps:
+                    st.markdown(f"""
+                    <div class="hyp-card">
+                        <div class="hyp-label">Hypothesis — {title}</div>
+                        {desc}
+                    </div>
+                    """, unsafe_allow_html=True)
 
         else:
             group_col_map = {
@@ -510,34 +866,31 @@ with tab1:
             }
             group_col = group_col_map[slice_by]
 
-            seg_query = f"""
+            seg_df, _ = run_query(f"""
                 SELECT {group_col} as segment_val, e.event_name, COUNT(DISTINCT e.session_id) as sessions
                 FROM events e
                 JOIN sessions s ON e.session_id = s.session_id
                 JOIN users u ON s.user_id = u.user_id
                 WHERE {filter_clause}
                 GROUP BY {group_col}, e.event_name
-            """
-            seg_df, _ = run_query(seg_query)
+            """)
             if seg_df is not None and not seg_df.empty:
                 fig = go.Figure()
-                for seg_val in seg_df["segment_val"].unique():
+                for seg_val in sorted(seg_df["segment_val"].unique()):
                     sub = seg_df[seg_df["segment_val"] == seg_val]
                     counts = []
-                    for step in funnel_steps:
+                    for step in FUNNEL_STEPS:
                         row = sub[sub["event_name"] == step]
-                        counts.append(row["sessions"].iloc[0] if not row.empty else 0)
+                        counts.append(int(row["sessions"].iloc[0]) if not row.empty else 0)
                     fig.add_trace(go.Funnel(
                         name=seg_val,
-                        y=step_labels,
+                        y=STEP_LABELS,
                         x=counts,
                         textinfo="value+percent initial"
                     ))
                 fig.update_layout(
-                    template=PLOTLY_TEMPLATE,
-                    height=500,
-                    margin=dict(l=20, r=20, t=40, b=20),
-                    title=dict(text=f"Funnel by {slice_by}", font=dict(size=16))
+                    **make_plotly_layout(height=480),
+                    title=dict(text=f"Funnel by {slice_by}", font=dict(size=14, color="#E0E0E0")),
                 )
                 st.plotly_chart(fig, use_container_width=True)
 
@@ -546,35 +899,21 @@ with tab1:
 # ---------------------------------------------------------------------------
 with tab2:
     if check_filters():
-        st.markdown("### 🧪 Experimentation Dashboard — AI Cross-Sell Recommendations")
-        st.caption("**Control (A):** Standard cart  |  **Treatment (B):** AI-powered cross-sell recommendations")
+        st.markdown('<div class="section-header"><h3>Experimentation Dashboard</h3><span class="badge">AI Cross-Sell</span></div>', unsafe_allow_html=True)
+        st.caption("**Variant A (Control):** Standard cart  ·  **Variant B (Treatment):** AI-powered cross-sell recommendations")
 
         filter_clause = get_filter_clause()
 
-        # Core metrics
-        ab_query = f"""
-            SELECT
-                s.variant,
+        ab_df, _ = run_query(f"""
+            SELECT s.variant,
                 COUNT(DISTINCT s.session_id) as total_sessions,
-                COUNT(DISTINCT CASE WHEN e.event_name = 'payment_completed' THEN s.session_id END) as conversions
+                COUNT(DISTINCT CASE WHEN e.event_name='payment_completed' THEN s.session_id END) as conversions
             FROM sessions s
             JOIN users u ON s.user_id = u.user_id
-            LEFT JOIN events e ON s.session_id = e.session_id AND e.event_name = 'payment_completed'
+            LEFT JOIN events e ON s.session_id = e.session_id AND e.event_name='payment_completed'
             WHERE {filter_clause}
             GROUP BY s.variant
-        """
-        ab_df, _ = run_query(ab_query)
-
-        aov_query = f"""
-            SELECT s.variant, AVG(o.order_value) as avg_aov, COUNT(*) as order_count,
-                   GROUP_CONCAT(o.order_value) as all_values
-            FROM orders o
-            JOIN sessions s ON o.session_id = s.session_id
-            JOIN users u ON s.user_id = u.user_id
-            WHERE {filter_clause}
-            GROUP BY s.variant
-        """
-        aov_df, _ = run_query(aov_query)
+        """)
 
         if ab_df is not None and len(ab_df) == 2:
             control = ab_df[ab_df["variant"] == "Control"].iloc[0]
@@ -582,133 +921,154 @@ with tab2:
 
             n_a, n_b = int(control["total_sessions"]), int(treatment["total_sessions"])
             conv_a, conv_b = int(control["conversions"]), int(treatment["conversions"])
-            cr_a = conv_a / n_a if n_a > 0 else 0
-            cr_b = conv_b / n_b if n_b > 0 else 0
-            relative_lift = ((cr_b - cr_a) / cr_a * 100) if cr_a > 0 else 0
+            cr_a = safe_div(conv_a, n_a)
+            cr_b = safe_div(conv_b, n_b)
+            relative_lift = safe_div(cr_b - cr_a, cr_a) * 100
 
-            st.markdown("#### 📊 Core Experiment Metrics")
-            col1, col2, col3, col4 = st.columns(4)
-            col1.metric("Control CR", f"{cr_a*100:.2f}%", help="Conversion rate for Variant A")
-            col2.metric("Treatment CR", f"{cr_b*100:.2f}%", help="Conversion rate for Variant B")
-            col3.metric("Relative Lift", f"+{relative_lift:.1f}%", delta=f"+{relative_lift:.1f}%")
-            col4.metric("Sample Sizes", f"{n_a:,} / {n_b:,}", help="N_A / N_B")
+            # Core metrics row
+            m1, m2, m3, m4, m5 = st.columns(5)
+            m1.metric("N (Control)", f"{n_a:,}")
+            m2.metric("N (Treatment)", f"{n_b:,}")
+            m3.metric("CR Control", f"{cr_a*100:.2f}%")
+            m4.metric("CR Treatment", f"{cr_b*100:.2f}%")
+            m5.metric("Relative Lift", f"+{relative_lift:.1f}%", delta=f"+{relative_lift:.1f}%")
 
-            st.markdown("---")
+            st.markdown("")
 
-            # Statistical Tests
-            st.markdown("#### 🔬 Statistical Rigor")
-            test_col1, test_col2 = st.columns(2)
+            # AOV data
+            aov_c_df, _ = run_query(f"""
+                SELECT o.order_value FROM orders o
+                JOIN sessions s ON o.session_id = s.session_id
+                JOIN users u ON s.user_id = u.user_id
+                WHERE s.variant='Control' AND {filter_clause}
+            """)
+            aov_t_df, _ = run_query(f"""
+                SELECT o.order_value FROM orders o
+                JOIN sessions s ON o.session_id = s.session_id
+                JOIN users u ON s.user_id = u.user_id
+                WHERE s.variant='Treatment' AND {filter_clause}
+            """)
 
-            with test_col1:
-                st.markdown("##### Chi-Square Test (Conversion Rate)")
+            # Statistical Tests — side by side panels
+            st.markdown('<div class="section-header"><h3>Statistical Rigor</h3></div>', unsafe_allow_html=True)
+
+            tc1, tc2 = st.columns(2)
+
+            with tc1:
+                st.markdown("**Chi-Square Test** — Conversion Rate")
                 if min(n_a, n_b) >= 30:
-                    contingency = np.array([
-                        [conv_a, n_a - conv_a],
-                        [conv_b, n_b - conv_b]
-                    ])
-                    chi2, p_value, dof, expected = stats.chi2_contingency(contingency)
-                    significant = p_value < 0.05
+                    contingency = np.array([[conv_a, n_a - conv_a], [conv_b, n_b - conv_b]])
+                    chi2, p_val, dof, _ = stats.chi2_contingency(contingency)
+                    sig = p_val < 0.05
 
-                    st.markdown(f"**χ² statistic:** {chi2:.4f}")
-                    st.markdown(f"**p-value:** {p_value:.6f}")
-                    if significant:
-                        st.markdown('<span class="stat-badge-sig">✅ Statistically Significant (p < 0.05)</span>', unsafe_allow_html=True)
-                    else:
-                        st.markdown('<span class="stat-badge-notsig">❌ Not Significant (p ≥ 0.05)</span>', unsafe_allow_html=True)
+                    st.markdown(f"""
+                    <div class="stat-panel">
+                        <div class="stat-row"><span class="label">Test</span><span class="value">Chi-Square of Independence</span></div>
+                        <div class="stat-row"><span class="label">χ² statistic</span><span class="value">{chi2:.4f}</span></div>
+                        <div class="stat-row"><span class="label">p-value</span><span class="value">{p_val:.8f}</span></div>
+                        <div class="stat-row"><span class="label">α</span><span class="value">0.05</span></div>
+                        <div class="stat-row"><span class="label">Verdict</span><span class="value">{'<span class="badge-sig">Significant</span>' if sig else '<span class="badge-notsig">Not Significant</span>'}</span></div>
+                    </div>
+                    """, unsafe_allow_html=True)
                 else:
-                    st.warning("⚠️ Sample size < 30. Results may be unreliable.")
+                    st.warning("Sample size < 30 — insufficient for reliable Chi-Square testing.")
 
-            with test_col2:
-                st.markdown("##### Welch's T-Test (Average Order Value)")
-                if aov_df is not None and len(aov_df) == 2:
-                    aov_control_vals_q = f"""
-                        SELECT o.order_value FROM orders o
-                        JOIN sessions s ON o.session_id = s.session_id
-                        JOIN users u ON s.user_id = u.user_id
-                        WHERE s.variant = 'Control' AND {filter_clause}
-                    """
-                    aov_treat_vals_q = f"""
-                        SELECT o.order_value FROM orders o
-                        JOIN sessions s ON o.session_id = s.session_id
-                        JOIN users u ON s.user_id = u.user_id
-                        WHERE s.variant = 'Treatment' AND {filter_clause}
-                    """
-                    aov_c, _ = run_query(aov_control_vals_q)
-                    aov_t, _ = run_query(aov_treat_vals_q)
+            with tc2:
+                st.markdown("**Welch's T-Test** — Average Order Value")
+                if aov_c_df is not None and aov_t_df is not None and len(aov_c_df) >= 30 and len(aov_t_df) >= 30:
+                    t_stat, t_pval = stats.ttest_ind(aov_c_df["order_value"], aov_t_df["order_value"], equal_var=False)
+                    aov_a = aov_c_df["order_value"].mean()
+                    aov_b = aov_t_df["order_value"].mean()
+                    se = np.sqrt(aov_c_df["order_value"].var()/len(aov_c_df) + aov_t_df["order_value"].var()/len(aov_t_df))
+                    ci_lo = (aov_b - aov_a) - 1.96 * se
+                    ci_hi = (aov_b - aov_a) + 1.96 * se
+                    t_sig = t_pval < 0.05
 
-                    if aov_c is not None and aov_t is not None and len(aov_c) >= 30 and len(aov_t) >= 30:
-                        t_stat, t_pval = stats.ttest_ind(aov_c["order_value"], aov_t["order_value"], equal_var=False)
-                        aov_a_mean = aov_c["order_value"].mean()
-                        aov_b_mean = aov_t["order_value"].mean()
+                    st.markdown(f"""
+                    <div class="stat-panel">
+                        <div class="stat-row"><span class="label">AOV Control</span><span class="value">₹{aov_a:.0f}</span></div>
+                        <div class="stat-row"><span class="label">AOV Treatment</span><span class="value">₹{aov_b:.0f}</span></div>
+                        <div class="stat-row"><span class="label">t-statistic</span><span class="value">{t_stat:.4f}</span></div>
+                        <div class="stat-row"><span class="label">p-value</span><span class="value">{t_pval:.8f}</span></div>
+                        <div class="stat-row"><span class="label">95% CI for Δ</span><span class="value">[₹{ci_lo:.1f}, ₹{ci_hi:.1f}]</span></div>
+                        <div class="stat-row"><span class="label">Verdict</span><span class="value">{'<span class="badge-sig">Significant</span>' if t_sig else '<span class="badge-notsig">Not Significant</span>'}</span></div>
+                    </div>
+                    """, unsafe_allow_html=True)
+                else:
+                    st.warning("Insufficient order data for T-Test.")
 
-                        ci_diff = aov_b_mean - aov_a_mean
-                        se = np.sqrt(aov_c["order_value"].var()/len(aov_c) + aov_t["order_value"].var()/len(aov_t))
-                        ci_lower = ci_diff - 1.96 * se
-                        ci_upper = ci_diff + 1.96 * se
+            st.markdown("")
 
-                        st.markdown(f"**AOV Control:** ₹{aov_a_mean:.0f}  |  **AOV Treatment:** ₹{aov_b_mean:.0f}")
-                        st.markdown(f"**t-statistic:** {t_stat:.4f}")
-                        st.markdown(f"**p-value:** {t_pval:.6f}")
-                        st.markdown(f"**95% CI for Δ AOV:** [₹{ci_lower:.1f}, ₹{ci_upper:.1f}]")
-
-                        if t_pval < 0.05:
-                            st.markdown('<span class="stat-badge-sig">✅ AOV Lift Significant</span>', unsafe_allow_html=True)
-                        else:
-                            st.markdown('<span class="stat-badge-notsig">❌ AOV Lift Not Significant</span>', unsafe_allow_html=True)
-                    else:
-                        st.warning("⚠️ Insufficient order data for T-Test.")
-
-            st.markdown("---")
+            # AOV Distribution
+            if aov_c_df is not None and aov_t_df is not None and len(aov_c_df) > 0:
+                st.markdown('<div class="section-header"><h3>AOV Distribution</h3></div>', unsafe_allow_html=True)
+                fig_aov = go.Figure()
+                fig_aov.add_trace(go.Histogram(
+                    x=aov_c_df["order_value"], name="Control",
+                    marker_color="rgba(108,117,125,0.5)", nbinsx=40,
+                    marker_line=dict(width=0),
+                ))
+                fig_aov.add_trace(go.Histogram(
+                    x=aov_t_df["order_value"], name="Treatment",
+                    marker_color="rgba(226,55,68,0.5)", nbinsx=40,
+                    marker_line=dict(width=0),
+                ))
+                fig_aov.update_layout(
+                    **make_plotly_layout(height=280),
+                    barmode="overlay",
+                    title=dict(text="Order Value Distribution by Variant", font=dict(size=14, color="#E0E0E0")),
+                    xaxis_title="Order Value (₹)",
+                    yaxis_title="Count",
+                )
+                st.plotly_chart(fig_aov, use_container_width=True)
 
             # SRM Check
-            st.markdown("#### 🚨 Sample Ratio Mismatch (SRM) Check")
-            expected_ratio = np.array([0.5, 0.5])
+            st.markdown('<div class="section-header"><h3>Sample Ratio Mismatch (SRM)</h3></div>', unsafe_allow_html=True)
             observed = np.array([n_a, n_b])
-            chi2_srm, p_srm = stats.chisquare(observed, f_exp=expected_ratio * observed.sum())
+            _, p_srm = stats.chisquare(observed, f_exp=np.array([0.5, 0.5]) * observed.sum())
 
-            srm_col1, srm_col2, srm_col3 = st.columns(3)
-            srm_col1.metric("Expected Split", "50% / 50%")
-            srm_col2.metric("Observed Split", f"{n_a/(n_a+n_b)*100:.1f}% / {n_b/(n_a+n_b)*100:.1f}%")
-            srm_col3.metric("SRM p-value", f"{p_srm:.6f}")
+            srm1, srm2, srm3 = st.columns(3)
+            srm1.metric("Expected Split", "50.0% / 50.0%")
+            srm2.metric("Observed Split", f"{n_a/(n_a+n_b)*100:.1f}% / {n_b/(n_a+n_b)*100:.1f}%")
+            srm3.metric("SRM p-value", f"{p_srm:.4f}")
 
             if p_srm < 0.001:
-                st.markdown('<div class="srm-alert">🚨 <strong>SRM ALERT:</strong> Traffic distribution is significantly biased (p < 0.001). Experiment results may be invalid. Investigate assignment logic.</div>', unsafe_allow_html=True)
+                st.markdown('<div class="srm-alert">SRM ALERT — Traffic distribution is significantly biased (p &lt; 0.001). Experiment results may be invalid. Investigate the assignment logic.</div>', unsafe_allow_html=True)
             else:
-                st.success("✅ No Sample Ratio Mismatch detected. Traffic split is balanced.")
-
-            st.markdown("---")
+                st.success("No Sample Ratio Mismatch detected. Traffic split is balanced.")
 
             # Guardrail Metrics
-            st.markdown("#### 🛡️ Guardrail Metrics")
-            g_col1, g_col2 = st.columns(2)
+            st.markdown("")
+            st.markdown('<div class="section-header"><h3>Guardrail Metrics</h3></div>', unsafe_allow_html=True)
 
-            with g_col1:
-                st.markdown("##### App Latency (simulated)")
-                latency_a = np.random.normal(220, 30, 100)
-                latency_b = np.random.normal(225, 32, 100)
+            g1, g2 = st.columns(2)
+            with g1:
+                np.random.seed(99)
+                lat_a = np.random.normal(220, 30, 200)
+                lat_b = np.random.normal(225, 32, 200)
                 fig_lat = go.Figure()
-                fig_lat.add_trace(go.Box(y=latency_a, name="Control", marker_color=MUTED_TEXT))
-                fig_lat.add_trace(go.Box(y=latency_b, name="Treatment", marker_color=ZOMATO_RED))
+                fig_lat.add_trace(go.Box(y=lat_a, name="Control", marker_color="rgba(108,117,125,0.7)", line=dict(color="#6C757D")))
+                fig_lat.add_trace(go.Box(y=lat_b, name="Treatment", marker_color="rgba(226,55,68,0.7)", line=dict(color=ZOMATO_RED)))
                 fig_lat.update_layout(
-                    template=PLOTLY_TEMPLATE, height=300,
-                    title="P50 Latency (ms)", yaxis_title="ms",
-                    margin=dict(l=20, r=20, t=40, b=20)
+                    **make_plotly_layout(height=280),
+                    title=dict(text="App Latency (ms) — P50", font=dict(size=13, color="#E0E0E0")),
+                    yaxis_title="Latency (ms)",
+                    showlegend=False,
                 )
                 st.plotly_chart(fig_lat, use_container_width=True)
-                st.caption("No significant latency degradation in Treatment.")
+                st.caption("No significant latency degradation in Treatment arm.")
 
-            with g_col2:
-                st.markdown("##### Support Tickets (simulated)")
+            with g2:
                 weeks = [f"W{i}" for i in range(1, 7)]
-                tickets_a = [45, 42, 48, 44, 41, 43]
-                tickets_b = [44, 46, 43, 47, 45, 44]
+                tix_a = [45, 42, 48, 44, 41, 43]
+                tix_b = [44, 46, 43, 47, 45, 44]
                 fig_tix = go.Figure()
-                fig_tix.add_trace(go.Scatter(x=weeks, y=tickets_a, name="Control", line=dict(color=MUTED_TEXT, width=2)))
-                fig_tix.add_trace(go.Scatter(x=weeks, y=tickets_b, name="Treatment", line=dict(color=ZOMATO_RED, width=2)))
+                fig_tix.add_trace(go.Scatter(x=weeks, y=tix_a, name="Control", line=dict(color="#6C757D", width=2), mode="lines+markers", marker=dict(size=5)))
+                fig_tix.add_trace(go.Scatter(x=weeks, y=tix_b, name="Treatment", line=dict(color=ZOMATO_RED, width=2), mode="lines+markers", marker=dict(size=5)))
                 fig_tix.update_layout(
-                    template=PLOTLY_TEMPLATE, height=300,
-                    title="Weekly Support Tickets", yaxis_title="Tickets",
-                    margin=dict(l=20, r=20, t=40, b=20)
+                    **make_plotly_layout(height=280),
+                    title=dict(text="Weekly Support Tickets", font=dict(size=13, color="#E0E0E0")),
+                    yaxis_title="Tickets",
                 )
                 st.plotly_chart(fig_tix, use_container_width=True)
                 st.caption("Support ticket volume stable across variants.")
@@ -718,25 +1078,26 @@ with tab2:
 # ---------------------------------------------------------------------------
 with tab3:
     if check_filters():
-        st.markdown("### 📈 Weekly Cohort Retention Analysis")
+        st.markdown('<div class="section-header"><h3>Weekly Cohort Retention</h3><span class="badge">Heatmap</span></div>', unsafe_allow_html=True)
 
         retention_type = st.radio(
-            "Retention Type:",
+            "Retention type",
             ["N-Week Retention", "Unbounded Retention"],
             horizontal=True,
             help="N-Week: active in exactly that week. Unbounded: active in that week or any later week."
         )
 
         filter_clause = get_filter_clause()
+        segs_sql = ",".join([f"'{s}'" for s in selected_segments])
+        devs_sql = ",".join([f"'{d}'" for d in selected_devices])
+        chs_sql = ",".join([f"'{c}'" for c in selected_channels])
 
-        cohort_query = f"""
+        cohort_df, _ = run_query(f"""
             WITH user_cohorts AS (
                 SELECT u.user_id,
                     CAST((JULIANDAY(u.signup_date) - JULIANDAY('2026-06-01')) / 7 AS INTEGER) as cohort_week
                 FROM users u
-                WHERE u.segment IN ({",".join([f"'{s}'" for s in selected_segments])})
-                    AND u.device IN ({",".join([f"'{d}'" for d in selected_devices])})
-                    AND u.acquisition_channel IN ({",".join([f"'{c}'" for c in selected_channels])})
+                WHERE u.segment IN ({segs_sql}) AND u.device IN ({devs_sql}) AND u.acquisition_channel IN ({chs_sql})
             ),
             user_activity AS (
                 SELECT s.user_id,
@@ -751,74 +1112,75 @@ with tab3:
             JOIN user_activity ua ON uc.user_id = ua.user_id
             WHERE ua.activity_week >= uc.cohort_week
             GROUP BY uc.cohort_week, ua.activity_week
-        """
+        """)
 
-        cohort_sizes_query = f"""
+        sizes_df, _ = run_query(f"""
             SELECT CAST((JULIANDAY(u.signup_date) - JULIANDAY('2026-06-01')) / 7 AS INTEGER) as cohort_week,
                    COUNT(DISTINCT u.user_id) as cohort_size
             FROM users u
-            WHERE u.segment IN ({",".join([f"'{s}'" for s in selected_segments])})
-                AND u.device IN ({",".join([f"'{d}'" for d in selected_devices])})
-                AND u.acquisition_channel IN ({",".join([f"'{c}'" for c in selected_channels])})
+            WHERE u.segment IN ({segs_sql}) AND u.device IN ({devs_sql}) AND u.acquisition_channel IN ({chs_sql})
             GROUP BY cohort_week
-        """
-
-        cohort_df, _ = run_query(cohort_query)
-        sizes_df, _ = run_query(cohort_sizes_query)
+        """)
 
         if cohort_df is not None and sizes_df is not None and not cohort_df.empty:
             sizes_map = dict(zip(sizes_df["cohort_week"], sizes_df["cohort_size"]))
 
             max_weeks = 7
-            cohort_weeks = sorted(cohort_df["cohort_week"].unique())
-            cohort_weeks = [w for w in cohort_weeks if w >= 0 and w < max_weeks]
+            cohort_weeks = sorted([w for w in cohort_df["cohort_week"].unique() if 0 <= w < max_weeks])
 
-            retention_matrix = np.zeros((len(cohort_weeks), max_weeks))
+            retention_matrix = np.full((len(cohort_weeks), max_weeks), np.nan)
 
             for i, cw in enumerate(cohort_weeks):
                 cohort_size = sizes_map.get(cw, 0)
                 if cohort_size == 0:
                     continue
-
-                if retention_type == "N-Week Retention":
-                    for week_offset in range(max_weeks):
-                        target_week = cw + week_offset
-                        row = cohort_df[(cohort_df["cohort_week"] == cw) & (cohort_df["activity_week"] == target_week)]
-                        active = row["active_users"].iloc[0] if not row.empty else 0
-                        retention_matrix[i, week_offset] = active / cohort_size * 100
-                else:
-                    for week_offset in range(max_weeks):
-                        target_weeks = range(cw + week_offset, cw + max_weeks + 5)
-                        active = cohort_df[
-                            (cohort_df["cohort_week"] == cw) &
-                            (cohort_df["activity_week"].isin(target_weeks))
-                        ]["active_users"].sum()
+                for offset in range(max_weeks):
+                    if retention_type == "N-Week Retention":
+                        target = cw + offset
+                        row = cohort_df[(cohort_df["cohort_week"] == cw) & (cohort_df["activity_week"] == target)]
+                        active = int(row["active_users"].iloc[0]) if not row.empty else 0
+                    else:
+                        targets = range(cw + offset, cw + max_weeks + 5)
+                        active = int(cohort_df[
+                            (cohort_df["cohort_week"] == cw) & (cohort_df["activity_week"].isin(targets))
+                        ]["active_users"].sum())
                         active = min(active, cohort_size)
-                        retention_matrix[i, week_offset] = active / cohort_size * 100
+                    retention_matrix[i, offset] = safe_div(active, cohort_size) * 100
 
-            cohort_labels = [f"Week {w}" for w in cohort_weeks]
+            cohort_labels = [f"W{w} ({sizes_map.get(w,0):,})" for w in cohort_weeks]
             period_labels = [f"+{w}w" for w in range(max_weeks)]
 
-            fig_heatmap = px.imshow(
-                retention_matrix,
+            # Mask NaN cells
+            text_matrix = np.where(np.isnan(retention_matrix), "", np.vectorize(lambda x: f"{x:.0f}")(retention_matrix))
+
+            fig_hm = go.Figure(go.Heatmap(
+                z=retention_matrix,
                 x=period_labels,
                 y=cohort_labels,
-                color_continuous_scale=[[0, "#FFF5F5"], [0.5, "#FF6B6B"], [1, "#E23744"]],
-                aspect="auto",
-                text_auto=".1f",
-                labels=dict(x="Weeks Since Signup", y="Cohort", color="Retention %")
+                text=text_matrix,
+                texttemplate="%{text}%",
+                textfont=dict(size=11, color="white"),
+                colorscale=[
+                    [0, "rgba(226,55,68,0.08)"],
+                    [0.3, "rgba(226,55,68,0.35)"],
+                    [0.6, "rgba(226,55,68,0.65)"],
+                    [1, "#E23744"],
+                ],
+                colorbar=dict(title=dict(text="Retention %", font=dict(size=11)), tickfont=dict(size=10)),
+                hoverongaps=False,
+            ))
+            fig_hm.update_layout(
+                **make_plotly_layout(height=380),
+                title=dict(text=f"{retention_type} Heatmap", font=dict(size=14, color="#E0E0E0")),
+                xaxis_title="Weeks Since Signup",
+                yaxis_title="Signup Cohort (size)",
             )
-            fig_heatmap.update_layout(
-                template=PLOTLY_TEMPLATE,
-                height=400,
-                title=dict(text=f"{retention_type} Heatmap", font=dict(size=16)),
-                margin=dict(l=20, r=20, t=60, b=20)
-            )
-            st.plotly_chart(fig_heatmap, use_container_width=True)
+            fig_hm.update_yaxes(autorange="reversed")
+            st.plotly_chart(fig_hm, use_container_width=True)
 
-            # LTV Projection
-            st.markdown("#### 💰 Cumulative Revenue by Cohort (LTV Proxy)")
-            ltv_query = f"""
+            # LTV
+            st.markdown('<div class="section-header"><h3>Cumulative Revenue by Cohort (LTV Proxy)</h3></div>', unsafe_allow_html=True)
+            ltv_df, _ = run_query(f"""
                 SELECT
                     CAST((JULIANDAY(u.signup_date) - JULIANDAY('2026-06-01')) / 7 AS INTEGER) as cohort_week,
                     CAST((JULIANDAY(s.date) - JULIANDAY(u.signup_date)) / 7 AS INTEGER) as week_offset,
@@ -826,32 +1188,28 @@ with tab3:
                 FROM orders o
                 JOIN sessions s ON o.session_id = s.session_id
                 JOIN users u ON o.user_id = u.user_id
-                WHERE u.segment IN ({",".join([f"'{s}'" for s in selected_segments])})
-                    AND s.device IN ({",".join([f"'{d}'" for d in selected_devices])})
-                    AND u.acquisition_channel IN ({",".join([f"'{c}'" for c in selected_channels])})
+                WHERE u.segment IN ({segs_sql}) AND s.device IN ({devs_sql}) AND u.acquisition_channel IN ({chs_sql})
                 GROUP BY cohort_week, week_offset
                 HAVING cohort_week >= 0 AND cohort_week < {max_weeks}
                 ORDER BY cohort_week, week_offset
-            """
-            ltv_df, _ = run_query(ltv_query)
+            """)
             if ltv_df is not None and not ltv_df.empty:
                 fig_ltv = go.Figure()
                 for cw in sorted(ltv_df["cohort_week"].unique()):
                     sub = ltv_df[ltv_df["cohort_week"] == cw].sort_values("week_offset")
-                    sub["cum_revenue"] = sub["revenue"].cumsum()
+                    sub["cum_rev"] = sub["revenue"].cumsum()
                     fig_ltv.add_trace(go.Scatter(
-                        x=sub["week_offset"],
-                        y=sub["cum_revenue"],
-                        name=f"Cohort W{int(cw)}",
-                        mode="lines+markers"
+                        x=sub["week_offset"], y=sub["cum_rev"],
+                        name=f"W{int(cw)}",
+                        mode="lines+markers",
+                        marker=dict(size=4),
+                        line=dict(width=2),
                     ))
                 fig_ltv.update_layout(
-                    template=PLOTLY_TEMPLATE,
-                    height=350,
-                    title="Cumulative Revenue per Cohort",
+                    **make_plotly_layout(height=320),
+                    title=dict(text="Cumulative Revenue per Cohort", font=dict(size=14, color="#E0E0E0")),
                     xaxis_title="Weeks Since Signup",
                     yaxis_title="Cumulative Revenue (₹)",
-                    margin=dict(l=20, r=20, t=60, b=20)
                 )
                 st.plotly_chart(fig_ltv, use_container_width=True)
 
@@ -859,27 +1217,61 @@ with tab3:
 # Tab 4: SQL Sandbox
 # ---------------------------------------------------------------------------
 with tab4:
-    st.markdown("### 💻 Live SQL Sandbox")
-    st.caption("Query the underlying database directly. Explore the schema, try the challenges, or write your own.")
+    st.markdown('<div class="section-header"><h3>Live SQL Sandbox</h3><span class="badge">Interactive</span></div>', unsafe_allow_html=True)
+    st.caption("Query the underlying in-memory database directly. Explore the schema, try the challenges, or write your own queries.")
 
-    with st.expander("📋 Database Schema", expanded=False):
-        st.markdown("""
-<div class="schema-box">
-<strong>users</strong> (user_id INT PK, signup_date TEXT, segment TEXT, device TEXT, acquisition_channel TEXT)<br>
-<strong>sessions</strong> (session_id INT PK, user_id INT FK, date TEXT, device TEXT, variant TEXT)<br>
-<strong>events</strong> (event_id INT PK, session_id INT FK, event_name TEXT, timestamp TEXT)<br>
-<strong>orders</strong> (order_id INT PK, session_id INT FK, user_id INT FK, order_value REAL, delivery_time_mins REAL, order_rating INT)<br>
+    with st.expander("Database Schema & Row Counts", expanded=True):
+        row_counts, _ = run_query("""
+            SELECT
+                (SELECT COUNT(*) FROM users) as users_n,
+                (SELECT COUNT(*) FROM sessions) as sessions_n,
+                (SELECT COUNT(*) FROM events) as events_n,
+                (SELECT COUNT(*) FROM orders) as orders_n
+        """)
+        un = f"{row_counts['users_n'].iloc[0]:,}" if row_counts is not None else "?"
+        sn = f"{row_counts['sessions_n'].iloc[0]:,}" if row_counts is not None else "?"
+        en = f"{row_counts['events_n'].iloc[0]:,}" if row_counts is not None else "?"
+        on = f"{row_counts['orders_n'].iloc[0]:,}" if row_counts is not None else "?"
+
+        st.markdown(f"""
+<div class="schema-container">
+<span class="tbl-name">users</span> <span class="col-type">({un} rows)</span><br>
+&nbsp;&nbsp;<span class="col-pk">user_id</span> <span class="col-type">INT PK</span>,
+<span class="col-name">signup_date</span> <span class="col-type">TEXT</span>,
+<span class="col-name">segment</span> <span class="col-type">TEXT</span>,
+<span class="col-name">device</span> <span class="col-type">TEXT</span>,
+<span class="col-name">acquisition_channel</span> <span class="col-type">TEXT</span>
+<br><br>
+<span class="tbl-name">sessions</span> <span class="col-type">({sn} rows)</span><br>
+&nbsp;&nbsp;<span class="col-pk">session_id</span> <span class="col-type">INT PK</span>,
+<span class="col-fk">user_id</span> <span class="col-type">INT FK→users</span>,
+<span class="col-name">date</span> <span class="col-type">TEXT</span>,
+<span class="col-name">device</span> <span class="col-type">TEXT</span>,
+<span class="col-name">variant</span> <span class="col-type">TEXT</span>
+<br><br>
+<span class="tbl-name">events</span> <span class="col-type">({en} rows)</span><br>
+&nbsp;&nbsp;<span class="col-pk">event_id</span> <span class="col-type">INT PK</span>,
+<span class="col-fk">session_id</span> <span class="col-type">INT FK→sessions</span>,
+<span class="col-name">event_name</span> <span class="col-type">TEXT</span>,
+<span class="col-name">timestamp</span> <span class="col-type">TEXT</span>
+<br><br>
+<span class="tbl-name">orders</span> <span class="col-type">({on} rows)</span><br>
+&nbsp;&nbsp;<span class="col-pk">order_id</span> <span class="col-type">INT PK</span>,
+<span class="col-fk">session_id</span> <span class="col-type">INT FK→sessions</span>,
+<span class="col-fk">user_id</span> <span class="col-type">INT FK→users</span>,
+<span class="col-name">order_value</span> <span class="col-type">REAL</span>,
+<span class="col-name">delivery_time_mins</span> <span class="col-type">REAL</span>,
+<span class="col-name">order_rating</span> <span class="col-type">INT</span>
 <br>
-<em>event_name values:</em> app_open, search_executed, restaurant_viewed, cart_added, checkout_initiated, payment_completed<br>
-<em>segment values:</em> Power User, Casual Diner, New User<br>
-<em>variant values:</em> Control, Treatment
+<span class="section-label">event_name: <span class="enum-val">app_open, search_executed, restaurant_viewed, cart_added, checkout_initiated, payment_completed</span></span>
+<span class="section-label">segment: <span class="enum-val">Power User, Casual Diner, New User</span> &nbsp;|&nbsp; variant: <span class="enum-val">Control, Treatment</span></span>
 </div>
 """, unsafe_allow_html=True)
 
     challenge = st.selectbox(
-        "🏆 Pre-Built SQL Challenges:",
+        "Pre-built SQL challenges",
         [
-            "-- Select a challenge --",
+            "— Write your own —",
             "Challenge 1: Funnel Conversion by Device",
             "Challenge 2: Churn Cohorts — One-Time Buyers",
             "Challenge 3: Slow Delivery Analysis by Day of Week"
@@ -928,12 +1320,9 @@ LEFT JOIN repeat_buyers rb ON fwb.user_id = rb.user_id;""",
         "Challenge 3: Slow Delivery Analysis by Day of Week": """-- Average delivery time by day of week, flagging weekend inefficiency
 SELECT
     CASE CAST(strftime('%w', s.date) AS INTEGER)
-        WHEN 0 THEN 'Sunday'
-        WHEN 1 THEN 'Monday'
-        WHEN 2 THEN 'Tuesday'
-        WHEN 3 THEN 'Wednesday'
-        WHEN 4 THEN 'Thursday'
-        WHEN 5 THEN 'Friday'
+        WHEN 0 THEN 'Sunday'    WHEN 1 THEN 'Monday'
+        WHEN 2 THEN 'Tuesday'   WHEN 3 THEN 'Wednesday'
+        WHEN 4 THEN 'Thursday'  WHEN 5 THEN 'Friday'
         WHEN 6 THEN 'Saturday'
     END AS day_of_week,
     COUNT(*) AS total_orders,
@@ -946,36 +1335,28 @@ ORDER BY CAST(strftime('%w', s.date) AS INTEGER);"""
     }
 
     default_sql = challenges_sql.get(challenge, "SELECT * FROM users LIMIT 10;")
-    if challenge == "-- Select a challenge --":
+    if challenge == "— Write your own —":
         default_sql = "SELECT * FROM users LIMIT 10;"
 
-    sql_input = st.text_area(
-        "Write your SQL query:",
-        value=default_sql,
-        height=180,
-        key="sql_editor"
-    )
+    sql_input = st.text_area("SQL Query", value=default_sql, height=200, key="sql_editor")
 
-    if st.button("▶️ Execute Query", type="primary"):
+    if st.button("Execute Query", type="primary", use_container_width=False):
         if sql_input.strip():
             result_df, error = run_query(sql_input)
             if error:
-                st.error(f"```\nSQL Error: {error}\n```")
+                st.error(f"```\n{error}\n```")
             elif result_df is not None:
-                st.success(f"✅ Query returned {len(result_df)} rows.")
-                st.dataframe(result_df, use_container_width=True, height=400)
+                st.success(f"Returned {len(result_df):,} rows")
+                st.dataframe(result_df, use_container_width=True, height=420)
         else:
-            st.warning("Please enter a SQL query.")
+            st.warning("Enter a SQL query to execute.")
 
 # ---------------------------------------------------------------------------
 # Footer
 # ---------------------------------------------------------------------------
-st.markdown("---")
-st.markdown(
-    "<div style='text-align:center; color:#6C757D; font-size:0.85rem;'>"
-    "Built by <strong>Ishaan Gupta</strong> — BiteMetrics v1.0 | "
-    "Streamlit + Plotly + SQLite | "
-    "Simulated data for demonstration purposes"
-    "</div>",
-    unsafe_allow_html=True
-)
+st.markdown("""
+<div class="footer">
+    Built by <strong>Ishaan Gupta</strong> · BiteMetrics v1.0<br>
+    Streamlit + Plotly + SQLite · Simulated data for demonstration
+</div>
+""", unsafe_allow_html=True)
