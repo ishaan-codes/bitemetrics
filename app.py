@@ -217,10 +217,16 @@ def init_database():
         "cart_added", "checkout_initiated", "payment_completed"
     ]
 
-    # Drop-off probabilities per step transition
+    # Cumulative funnel rates (fraction of all sessions reaching each step)
     # Control: ~8% end-to-end, Treatment: ~11%
-    control_probs = [1.0, 0.72, 0.58, 0.38, 0.22, 0.08]
-    treatment_probs = [1.0, 0.75, 0.62, 0.43, 0.28, 0.11]
+    control_cum = [1.0, 0.72, 0.58, 0.38, 0.22, 0.08]
+    treatment_cum = [1.0, 0.75, 0.62, 0.43, 0.28, 0.11]
+
+    def cum_to_conditional(cum):
+        return [cum[0]] + [cum[i] / cum[i-1] if cum[i-1] > 0 else 0 for i in range(1, len(cum))]
+
+    control_probs = cum_to_conditional(control_cum)
+    treatment_probs = cum_to_conditional(treatment_cum)
 
     n_sessions = 50000
     sessions_data = []
@@ -240,21 +246,22 @@ def init_database():
 
         sessions_data.append((sid, uid, sess_date.strftime("%Y-%m-%d"), dev, variant))
 
-        probs = control_probs if variant == "Control" else treatment_probs
+        cum = list(control_cum if variant == "Control" else treatment_cum)
 
-        # Device modifier
+        # Device modifier (applied to cumulative rates before converting)
         if dev == "Web":
-            probs = [p * 0.85 for p in probs]
-            probs[0] = 1.0
+            cum = [cum[0]] + [c * 0.85 for c in cum[1:]]
 
         # Segment modifier
         seg = user_segments[uid]
         if seg == "Power User":
-            probs = [min(1.0, p * 1.15) for p in probs]
-            probs[0] = 1.0
+            cum = [min(1.0, c * 1.15) for c in cum]
+            cum[0] = 1.0
         elif seg == "New User":
-            probs = [p * 0.9 for p in probs]
-            probs[0] = 1.0
+            cum = [c * 0.9 for c in cum]
+            cum[0] = 1.0
+
+        probs = cum_to_conditional(cum)
 
         base_time = sess_date.replace(
             hour=np.random.randint(8, 23),
