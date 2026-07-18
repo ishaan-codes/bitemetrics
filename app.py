@@ -861,7 +861,7 @@ def plotly_layout(**kw):
 # ---------------------------------------------------------------------------
 # Tabs
 # ---------------------------------------------------------------------------
-tab1, tab2, tab3, tab4 = st.tabs(["Funnel Analysis", "A/B Testing Engine", "Cohort Retention", "SQL Sandbox"])
+tab1, tab2, tab3, tab5, tab4 = st.tabs(["Funnel Analysis", "A/B Testing Engine", "Cohort Retention", "Growth Metrics", "SQL Sandbox"])
 
 STEPS = ["app_open","search_executed","restaurant_viewed","cart_added","checkout_initiated","payment_completed"]
 LABELS = ["App Open","Search","Restaurant View","Cart Added","Checkout","Payment"]
@@ -1240,6 +1240,221 @@ with tab3:
                 fl.update_layout(**plotly_layout(height=300), title=dict(text="Cumulative Revenue per Cohort", font=dict(size=14)),
                     xaxis_title="Weeks Since Signup", yaxis_title="Revenue (₹)")
                 st.plotly_chart(fl, use_container_width=True)
+
+# ===== TAB 5: GROWTH METRICS =====
+with tab5:
+    if check_filters():
+        st.markdown('<div class="sh"><h3>Growth & Engagement Metrics</h3><span class="badge">Health</span></div>', unsafe_allow_html=True)
+        fc = fclause()
+
+        # ── DAU / WAU / Stickiness ──
+        _dau_raw, _ = q(f"""
+            SELECT s.date, s.user_id
+            FROM sessions s JOIN users u ON s.user_id=u.user_id
+            WHERE {fc}
+        """)
+        dau_wau = None
+        if _dau_raw is not None and not _dau_raw.empty:
+            _dau_raw['date'] = pd.to_datetime(_dau_raw['date'])
+            _daily_users = _dau_raw.groupby('date')['user_id'].apply(set)
+            _dates_sorted = sorted(_daily_users.index)
+            _rows = []
+            for _dt in _dates_sorted:
+                _dau = len(_daily_users[_dt])
+                _wau_users = set()
+                for _d2 in _dates_sorted:
+                    if pd.Timedelta(days=0) <= (_dt - _d2) <= pd.Timedelta(days=6):
+                        _wau_users |= _daily_users[_d2]
+                _wau = len(_wau_users)
+                _stick = round(_dau / _wau * 100, 1) if _wau > 0 else 0
+                _rows.append({"date": _dt.strftime("%Y-%m-%d"), "dau": _dau, "wau": _wau, "stickiness": _stick})
+            dau_wau = pd.DataFrame(_rows)
+
+        if dau_wau is not None and not dau_wau.empty:
+            avg_dau = dau_wau.dau.mean()
+            avg_wau = dau_wau.wau.mean()
+            avg_stick = dau_wau.stickiness.mean()
+
+            dm1, dm2, dm3, dm4 = st.columns(4)
+            dm1.metric("Avg DAU", f"{avg_dau:,.0f}")
+            dm2.metric("Avg WAU", f"{avg_wau:,.0f}")
+            dm3.metric("DAU/WAU Stickiness", f"{avg_stick:.1f}%")
+            dm4.metric("Peak DAU", f"{dau_wau.dau.max():,}")
+
+            fig_dw = go.Figure()
+            fig_dw.add_trace(go.Scatter(x=dau_wau.date, y=dau_wau.dau, name="DAU",
+                line=dict(color=ZOMATO, width=2), fill="tozeroy",
+                fillcolor=f"rgba(226,55,68,0.{'12' if IS_DARK else '08'})"))
+            fig_dw.add_trace(go.Scatter(x=dau_wau.date, y=dau_wau.wau, name="WAU",
+                line=dict(color="#4ECDC4", width=2), fill="tozeroy",
+                fillcolor=f"rgba(78,205,196,0.{'12' if IS_DARK else '08'})"))
+            fig_dw.update_layout(**plotly_layout(height=280),
+                title=dict(text="Daily Active Users vs Weekly Active Users", font=dict(size=13)),
+                yaxis_title="Users")
+            st.plotly_chart(fig_dw, use_container_width=True)
+
+            fig_st = go.Figure()
+            fig_st.add_trace(go.Scatter(x=dau_wau.date, y=dau_wau.stickiness, name="Stickiness",
+                line=dict(color="#FBBF24", width=2), mode="lines",
+                fill="tozeroy", fillcolor=f"rgba(251,191,36,0.{'12' if IS_DARK else '06'})"))
+            fig_st.add_trace(go.Scatter(x=[dau_wau.date.iloc[0], dau_wau.date.iloc[-1]],
+                y=[20, 20], name="Good (20%)", line=dict(color="#22C55E", width=1, dash="dash"), mode="lines"))
+            fig_st.update_layout(**plotly_layout(height=220),
+                title=dict(text="DAU/WAU Stickiness Ratio", font=dict(size=13)),
+                yaxis_title="%", yaxis_range=[0, max(50, dau_wau.stickiness.max()*1.2)])
+            st.plotly_chart(fig_st, use_container_width=True)
+            st.caption("DAU/WAU stickiness measures daily engagement intensity. >20% is strong for food delivery (benchmark: Swiggy ~18-22%, DoorDash ~15-20%).")
+
+        # ── Activation Funnel ──
+        st.markdown("")
+        st.markdown('<div class="sh"><h3>New User Activation</h3><span class="badge">Onboarding</span></div>', unsafe_allow_html=True)
+        act, _ = q(f"""
+            WITH new_users AS (
+                SELECT u.user_id, u.signup_date FROM users u
+                WHERE u.segment IN ({",".join(repr(s) for s in selected_segments)})
+                AND u.device IN ({",".join(repr(d) for d in selected_devices)})
+                AND u.acquisition_channel IN ({",".join(repr(c) for c in selected_channels)})
+            ),
+            first_sess AS (
+                SELECT nu.user_id,
+                    MIN(s.session_id) first_sid,
+                    COUNT(DISTINCT s.session_id) total_sessions
+                FROM new_users nu JOIN sessions s ON nu.user_id=s.user_id
+                GROUP BY nu.user_id
+            ),
+            activation AS (
+                SELECT fs.user_id, fs.total_sessions,
+                    MAX(CASE WHEN e.event_name='search_executed' THEN 1 ELSE 0 END) searched,
+                    MAX(CASE WHEN e.event_name='restaurant_viewed' THEN 1 ELSE 0 END) viewed,
+                    MAX(CASE WHEN e.event_name='cart_added' THEN 1 ELSE 0 END) carted,
+                    MAX(CASE WHEN e.event_name='payment_completed' THEN 1 ELSE 0 END) ordered
+                FROM first_sess fs
+                JOIN events e ON e.session_id=fs.first_sid
+                GROUP BY fs.user_id, fs.total_sessions
+            )
+            SELECT COUNT(*) total,
+                SUM(searched) searched, SUM(viewed) viewed,
+                SUM(carted) carted, SUM(ordered) first_ordered,
+                SUM(CASE WHEN total_sessions >= 2 THEN 1 ELSE 0 END) returned,
+                SUM(CASE WHEN total_sessions >= 3 THEN 1 ELSE 0 END) retained
+            FROM activation
+        """)
+        if act is not None and not act.empty:
+            r = act.iloc[0]
+            total = int(r.total)
+            act_steps = [
+                ("Signed Up", total),
+                ("First Search", int(r.searched)),
+                ("Viewed Restaurant", int(r.viewed)),
+                ("Added to Cart", int(r.carted)),
+                ("First Order", int(r.first_ordered)),
+                ("Returned (2+ sessions)", int(r.returned)),
+                ("Retained (3+ sessions)", int(r.retained)),
+            ]
+
+            fig_act = go.Figure(go.Funnel(
+                y=[s[0] for s in act_steps],
+                x=[s[1] for s in act_steps],
+                textinfo="value+percent initial",
+                textfont=dict(size=11),
+                marker=dict(
+                    color=["#E23744","#E8434F","#EF6B73","#F49098","#F9B5BC","#4ECDC4","#3BA89F"],
+                    line=dict(width=0)
+                ),
+                connector=dict(line=dict(color=T['card_border'], width=1))
+            ))
+            fig_act.update_layout(**plotly_layout(height=380),
+                title=dict(text="New User Activation Funnel", font=dict(size=14)))
+            st.plotly_chart(fig_act, use_container_width=True)
+
+            activation_rate = sdiv(int(r.first_ordered), total)*100
+            return_rate = sdiv(int(r.returned), total)*100
+            a1, a2, a3, a4 = st.columns(4)
+            a1.metric("Activation Rate", f"{activation_rate:.1f}%", help="% of signups who complete first order")
+            a2.metric("Return Rate", f"{return_rate:.1f}%", help="% of all users who return for 2+ sessions")
+            a3.metric("First Order Users", f"{int(r.first_ordered):,}")
+            a4.metric("Retained Users (3+)", f"{int(r.retained):,}")
+
+        # ── Power User Curve ──
+        st.markdown("")
+        st.markdown('<div class="sh"><h3>Power User Curve</h3><span class="badge">L28</span></div>', unsafe_allow_html=True)
+        st.caption("Distribution of active days per user in the last 28 days — reveals engagement concentration.")
+
+        puc, _ = q(f"""
+            SELECT active_days, COUNT(*) user_count FROM (
+                SELECT s.user_id, COUNT(DISTINCT s.date) active_days
+                FROM sessions s JOIN users u ON s.user_id=u.user_id
+                WHERE {fc}
+                AND JULIANDAY('2026-07-15') - JULIANDAY(s.date) <= 28
+                GROUP BY s.user_id
+            ) GROUP BY active_days ORDER BY active_days
+        """)
+        if puc is not None and not puc.empty:
+            max_days = int(puc.active_days.max())
+            all_days = pd.DataFrame({"active_days": range(1, max_days+1)})
+            puc_full = all_days.merge(puc, on="active_days", how="left").fillna(0)
+            puc_full["user_count"] = puc_full["user_count"].astype(int)
+            total_users_puc = puc_full.user_count.sum()
+            puc_full["pct"] = puc_full.user_count / total_users_puc * 100
+
+            colors = [ZOMATO if d >= max_days * 0.7 else ('#4ECDC4' if d >= max_days * 0.3 else f"rgba(148,163,184,0.{'5' if IS_DARK else '35'})") for d in puc_full.active_days]
+
+            fig_puc = go.Figure(go.Bar(
+                x=puc_full.active_days, y=puc_full.pct,
+                marker_color=colors,
+                marker_line=dict(width=0),
+                hovertemplate="Days active: %{x}<br>Users: %{customdata[0]:,} (%{y:.1f}%)<extra></extra>",
+                customdata=puc_full[["user_count"]].values
+            ))
+            fig_puc.update_layout(**plotly_layout(height=280),
+                title=dict(text="L28 Power User Curve", font=dict(size=13)),
+                xaxis_title="Days Active (last 28 days)", yaxis_title="% of Users")
+            st.plotly_chart(fig_puc, use_container_width=True)
+
+            power_users = int(puc_full[puc_full.active_days >= max_days * 0.7].user_count.sum())
+            casual_users = int(puc_full[puc_full.active_days <= max_days * 0.3].user_count.sum())
+            p1, p2, p3 = st.columns(3)
+            p1.metric("Power Users (>70% days)", f"{power_users:,}",
+                      delta=f"{sdiv(power_users, total_users_puc)*100:.1f}%")
+            p2.metric("Casual Users (<30% days)", f"{casual_users:,}",
+                      delta=f"{sdiv(casual_users, total_users_puc)*100:.1f}%")
+            p3.metric("Smile Score", f"{'Strong' if sdiv(power_users, total_users_puc) > 0.15 else 'Weak'}",
+                      help="A 'smile' curve (high on both ends) indicates healthy engagement. Power users >15% is strong.")
+
+            st.caption("Red bars = power users (active >70% of days). Teal = moderate. Gray = casual. A right-heavy distribution signals strong product-market fit.")
+
+        # ── Engagement by Channel ──
+        st.markdown("")
+        st.markdown('<div class="sh"><h3>Engagement by Acquisition Channel</h3></div>', unsafe_allow_html=True)
+        ch_eng, _ = q(f"""
+            SELECT u.acquisition_channel,
+                COUNT(DISTINCT s.user_id) users,
+                COUNT(DISTINCT s.session_id) sessions,
+                ROUND(CAST(COUNT(DISTINCT s.session_id) AS FLOAT) / COUNT(DISTINCT s.user_id), 1) sess_per_user,
+                COUNT(DISTINCT CASE WHEN e.event_name='payment_completed' THEN s.session_id END) orders,
+                ROUND(CAST(COUNT(DISTINCT CASE WHEN e.event_name='payment_completed' THEN s.session_id END) AS FLOAT)
+                    / NULLIF(COUNT(DISTINCT s.session_id), 0) * 100, 2) cr
+            FROM sessions s JOIN users u ON s.user_id=u.user_id
+            LEFT JOIN events e ON s.session_id=e.session_id AND e.event_name='payment_completed'
+            WHERE {fc}
+            GROUP BY u.acquisition_channel ORDER BY cr DESC
+        """)
+        if ch_eng is not None and not ch_eng.empty:
+            ch_rows = ""
+            for _, r in ch_eng.iterrows():
+                ch_rows += f"""<tr>
+                    <td><strong>{r.acquisition_channel}</strong></td>
+                    <td class="mono">{int(r.users):,}</td>
+                    <td class="mono">{int(r.sessions):,}</td>
+                    <td class="mono">{r.sess_per_user:.1f}</td>
+                    <td class="mono">{int(r.orders):,}</td>
+                    <td class="mono">{r.cr:.2f}%</td>
+                </tr>"""
+            st.markdown(f"""<table class="seg-table">
+                <thead><tr><th>Channel</th><th>Users</th><th>Sessions</th><th>Sess/User</th><th>Orders</th><th>CR</th></tr></thead>
+                <tbody>{ch_rows}</tbody>
+            </table>""", unsafe_allow_html=True)
+            st.caption("Sessions per user indicates channel quality — high-intent channels (Search) convert better but may have lower session depth than discovery channels (Instagram).")
 
 # ===== TAB 4: SQL SANDBOX =====
 with tab4:
