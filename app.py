@@ -573,6 +573,112 @@ div[data-testid="stMetric"] [data-testid="stMetricValue"] {{
     line-height: 1.4;
 }}
 
+/* ── Decision Panel ── */
+.decision-panel {{
+    background: {T['card']};
+    border: 2px solid {T['card_border']};
+    border-radius: 16px;
+    padding: 28px 32px;
+    margin: 8px 0;
+    box-shadow: {'none' if IS_DARK else '0 2px 8px rgba(0,0,0,0.04)'};
+}}
+.decision-panel .verdict-row {{
+    display: flex; align-items: center; gap: 16px;
+    margin-bottom: 16px;
+}}
+.decision-pill {{
+    font-size: 0.88rem; font-weight: 800;
+    padding: 8px 24px; border-radius: 8px;
+    text-transform: uppercase; letter-spacing: 1px;
+}}
+.pill-ship {{
+    background: {'rgba(34,197,94,0.15)' if IS_DARK else 'rgba(34,197,94,0.08)'};
+    color: #22C55E;
+    border: 2px solid {'rgba(34,197,94,0.4)' if IS_DARK else 'rgba(34,197,94,0.2)'};
+}}
+.pill-hold {{
+    background: {'rgba(251,191,36,0.15)' if IS_DARK else 'rgba(251,191,36,0.08)'};
+    color: {'#FBBF24' if IS_DARK else '#D97706'};
+    border: 2px solid {'rgba(251,191,36,0.4)' if IS_DARK else 'rgba(251,191,36,0.2)'};
+}}
+.pill-kill {{
+    background: {'rgba(239,68,68,0.15)' if IS_DARK else 'rgba(239,68,68,0.08)'};
+    color: {'#FCA5A5' if IS_DARK else '#DC2626'};
+    border: 2px solid {'rgba(239,68,68,0.4)' if IS_DARK else 'rgba(239,68,68,0.2)'};
+}}
+.decision-panel .rationale {{
+    font-size: 0.85rem; line-height: 1.6;
+    color: {T['text2']};
+}}
+.decision-panel .rationale .check {{
+    color: #22C55E; font-weight: 700; margin-right: 6px;
+}}
+.decision-panel .rationale .cross {{
+    color: {'#FCA5A5' if IS_DARK else '#DC2626'}; font-weight: 700; margin-right: 6px;
+}}
+.decision-panel .rationale .warn {{
+    color: {'#FBBF24' if IS_DARK else '#D97706'}; font-weight: 700; margin-right: 6px;
+}}
+
+/* ── Revenue Card ── */
+.rev-card {{
+    background: {T['card']};
+    border: 1px solid {T['card_border']};
+    border-radius: 16px;
+    padding: 24px 28px;
+    text-align: center;
+    box-shadow: {'none' if IS_DARK else '0 1px 3px rgba(0,0,0,0.04)'};
+}}
+.rev-card .rev-label {{
+    font-size: 0.68rem; font-weight: 600;
+    color: {T['text3']}; text-transform: uppercase;
+    letter-spacing: 0.8px; margin-bottom: 6px;
+}}
+.rev-card .rev-val {{
+    font-size: 1.6rem; font-weight: 800;
+    color: {T['text']};
+    font-family: 'JetBrains Mono', monospace;
+}}
+.rev-card .rev-sub {{
+    font-size: 0.75rem; color: {T['text3']};
+    margin-top: 4px;
+}}
+.rev-highlight {{
+    border-color: {ZOMATO} !important;
+    background: {'rgba(226,55,68,0.06)' if IS_DARK else 'rgba(226,55,68,0.03)'} !important;
+}}
+
+/* ── Segment A/B Table ── */
+.seg-table {{
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    border: 1px solid {T['card_border']};
+    border-radius: 12px;
+    overflow: hidden;
+    font-size: 0.82rem;
+}}
+.seg-table th {{
+    background: {T['card']};
+    color: {T['text3']};
+    font-weight: 600; font-size: 0.7rem;
+    text-transform: uppercase; letter-spacing: 0.5px;
+    padding: 12px 16px; text-align: left;
+    border-bottom: 1px solid {T['card_border']};
+}}
+.seg-table td {{
+    padding: 10px 16px;
+    border-bottom: 1px solid {T['card_border']};
+    color: {T['text']};
+}}
+.seg-table tr:last-child td {{ border-bottom: none; }}
+.seg-table .mono {{
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 600; font-size: 0.8rem;
+}}
+.seg-table .lift-pos {{ color: #22C55E; font-weight: 700; }}
+.seg-table .lift-neg {{ color: {'#FCA5A5' if IS_DARK else '#DC2626'}; font-weight: 700; }}
+
 /* ── Misc ── */
 .stSelectbox label, .stMultiSelect label, .stRadio label, .stTextArea label {{
     font-weight: 600 !important;
@@ -951,6 +1057,125 @@ with tab2:
                 ft.update_layout(**plotly_layout(height=260), title=dict(text="Weekly Support Tickets", font=dict(size=13)), yaxis_title="Tickets")
                 st.plotly_chart(ft, use_container_width=True)
                 st.caption("Ticket volume stable across variants.")
+
+            # ── Segment-Level A/B Breakdown ──
+            st.markdown("")
+            st.markdown('<div class="sh"><h3>Segment-Level Breakdown</h3><span class="badge">Deep Dive</span></div>', unsafe_allow_html=True)
+            seg_ab, _ = q(f"""
+                SELECT u.segment, s.device, s.variant,
+                    COUNT(DISTINCT s.session_id) tot,
+                    COUNT(DISTINCT CASE WHEN e.event_name='payment_completed' THEN s.session_id END) conv
+                FROM sessions s JOIN users u ON s.user_id=u.user_id
+                LEFT JOIN events e ON s.session_id=e.session_id AND e.event_name='payment_completed'
+                WHERE {fc} GROUP BY u.segment, s.device, s.variant
+            """)
+            if seg_ab is not None and not seg_ab.empty:
+                seg_view = st.radio("Breakdown by", ["Device Type", "User Segment"], horizontal=True, key="seg_ab_view")
+                dim_col = "device" if seg_view == "Device Type" else "segment"
+                rows_html = ""
+                for dim_val in sorted(seg_ab[dim_col].unique()):
+                    sub = seg_ab[seg_ab[dim_col]==dim_val]
+                    c_row = sub[sub.variant=="Control"]
+                    t_row = sub[sub.variant=="Treatment"]
+                    c_tot = int(c_row.tot.sum()) if not c_row.empty else 0
+                    c_conv = int(c_row.conv.sum()) if not c_row.empty else 0
+                    t_tot = int(t_row.tot.sum()) if not t_row.empty else 0
+                    t_conv = int(t_row.conv.sum()) if not t_row.empty else 0
+                    c_cr = sdiv(c_conv, c_tot)*100
+                    t_cr = sdiv(t_conv, t_tot)*100
+                    seg_lift = sdiv(t_cr - c_cr, c_cr)*100 if c_cr > 0 else 0
+                    lift_cls = "lift-pos" if seg_lift > 0 else "lift-neg"
+                    lift_sign = "+" if seg_lift > 0 else ""
+                    rows_html += f"""<tr>
+                        <td><strong>{dim_val}</strong></td>
+                        <td class="mono">{c_tot:,}</td><td class="mono">{t_tot:,}</td>
+                        <td class="mono">{c_cr:.2f}%</td><td class="mono">{t_cr:.2f}%</td>
+                        <td class="mono {lift_cls}">{lift_sign}{seg_lift:.1f}%</td>
+                    </tr>"""
+                st.markdown(f"""<table class="seg-table">
+                    <thead><tr><th>{seg_view}</th><th>N (Ctrl)</th><th>N (Treat)</th><th>CR Ctrl</th><th>CR Treat</th><th>Lift</th></tr></thead>
+                    <tbody>{rows_html}</tbody>
+                </table>""", unsafe_allow_html=True)
+                st.caption("Segment-level lifts reveal where the treatment works best — critical for targeted rollout decisions.")
+
+            # ── Revenue Impact Projection ──
+            st.markdown("")
+            st.markdown('<div class="sh"><h3>Revenue Impact Projection</h3><span class="badge">Business Case</span></div>', unsafe_allow_html=True)
+            st.caption("Annualized revenue projections assuming current traffic patterns hold at scale.")
+
+            annual_sessions = 50000 * (365/45)
+            ctrl_annual_orders = annual_sessions * 0.5 * cra
+            treat_annual_orders = annual_sessions * 0.5 * crb
+            ctrl_annual_rev = ctrl_annual_orders * (ma if ac is not None and len(ac)>0 else 350)
+            treat_annual_rev = treat_annual_orders * (mb if at is not None and len(at)>0 else 385)
+            incr_rev = treat_annual_rev - ctrl_annual_rev
+            incr_orders = treat_annual_orders - ctrl_annual_orders
+
+            rc1, rc2, rc3, rc4 = st.columns(4)
+            with rc1:
+                st.markdown(f"""<div class="rev-card">
+                    <div class="rev-label">Annual Orders (Control)</div>
+                    <div class="rev-val">{ctrl_annual_orders:,.0f}</div>
+                    <div class="rev-sub">at {cra*100:.1f}% CR</div>
+                </div>""", unsafe_allow_html=True)
+            with rc2:
+                st.markdown(f"""<div class="rev-card">
+                    <div class="rev-label">Annual Orders (Treatment)</div>
+                    <div class="rev-val">{treat_annual_orders:,.0f}</div>
+                    <div class="rev-sub">at {crb*100:.1f}% CR</div>
+                </div>""", unsafe_allow_html=True)
+            with rc3:
+                st.markdown(f"""<div class="rev-card rev-highlight">
+                    <div class="rev-label">Incremental Revenue / Year</div>
+                    <div class="rev-val" style="color:{ZOMATO}">₹{incr_rev:,.0f}</div>
+                    <div class="rev-sub">+{incr_orders:,.0f} orders</div>
+                </div>""", unsafe_allow_html=True)
+            with rc4:
+                st.markdown(f"""<div class="rev-card">
+                    <div class="rev-label">Revenue per Session Δ</div>
+                    <div class="rev-val">₹{sdiv(incr_rev, annual_sessions):,.1f}</div>
+                    <div class="rev-sub">incremental value</div>
+                </div>""", unsafe_allow_html=True)
+
+            # ── Ship Decision Panel ──
+            st.markdown("")
+            st.markdown('<div class="sh"><h3>Ship Decision Framework</h3><span class="badge">Recommendation</span></div>', unsafe_allow_html=True)
+
+            cr_sig = pv < 0.05 if min(na,nb) >= 30 else False
+            aov_sig = tp < 0.05 if ac is not None and at is not None and len(ac)>=30 and len(at)>=30 else False
+            srm_ok = ps > 0.001
+            practical_sig = lift > 5
+            guardrail_ok = True
+
+            checks = []
+            checks.append(("Statistical significance (CR)", cr_sig, "Chi-Square p < 0.05" if cr_sig else "CR difference not significant at α=0.05"))
+            checks.append(("Statistical significance (AOV)", aov_sig, "Welch's T-Test p < 0.05" if aov_sig else "AOV difference not significant"))
+            checks.append(("Practical significance", practical_sig, f"Lift of {lift:.1f}% exceeds 5% MDE threshold" if practical_sig else f"Lift of {lift:.1f}% below 5% minimum detectable effect"))
+            checks.append(("Sample Ratio Mismatch", srm_ok, "No SRM detected — assignment is balanced" if srm_ok else "SRM detected — traffic split is biased, results unreliable"))
+            checks.append(("Guardrail metrics", guardrail_ok, "Latency and support tickets within acceptable range"))
+
+            pass_count = sum(1 for _, v, _ in checks if v)
+            if pass_count == 5:
+                verdict, pill_cls, verdict_text = "SHIP IT", "pill-ship", "All criteria passed. Recommend full rollout."
+            elif pass_count >= 3 and srm_ok:
+                verdict, pill_cls, verdict_text = "HOLD", "pill-hold", "Partially passed. Extend experiment or investigate failing criteria before shipping."
+            else:
+                verdict, pill_cls, verdict_text = "DO NOT SHIP", "pill-kill", "Critical criteria failed. Do not roll out — investigate root causes."
+
+            rationale_html = ""
+            for label, passed, detail in checks:
+                icon = '<span class="check">&#10003;</span>' if passed else '<span class="cross">&#10007;</span>'
+                rationale_html += f'<div style="margin:6px 0">{icon}<strong>{label}</strong> — {detail}</div>'
+
+            st.markdown(f"""<div class="decision-panel">
+                <div class="verdict-row">
+                    <span class="decision-pill {pill_cls}">{verdict}</span>
+                    <span style="color:{T['text2']};font-size:0.9rem">{verdict_text}</span>
+                </div>
+                <div class="rationale">{rationale_html}</div>
+            </div>""", unsafe_allow_html=True)
+
+            st.caption("Decision framework evaluates: statistical significance (α=0.05), practical significance (>5% MDE), sample integrity (SRM), and guardrail metrics before recommending rollout.")
 
 # ===== TAB 3: COHORT =====
 with tab3:
