@@ -1423,6 +1423,80 @@ with tab5:
 
             st.caption("Red bars = power users (active >70% of days). Teal = moderate. Gray = casual. A right-heavy distribution signals strong product-market fit.")
 
+        # ── Growth Accounting ──
+        st.markdown("")
+        st.markdown('<div class="sh"><h3>Growth Accounting</h3><span class="badge">Framework</span></div>', unsafe_allow_html=True)
+        st.caption("Weekly breakdown of user base into New, Retained, Resurrected, and Churned — the canonical growth decomposition.")
+
+        _ga_raw, _ = q(f"""
+            SELECT s.user_id, s.date
+            FROM sessions s JOIN users u ON s.user_id=u.user_id
+            WHERE {fc}
+            ORDER BY s.date
+        """)
+        if _ga_raw is not None and not _ga_raw.empty:
+            _ga_raw['date'] = pd.to_datetime(_ga_raw['date'])
+            _ga_raw['week'] = _ga_raw['date'].dt.isocalendar().week.astype(int)
+            _ga_raw['year_week'] = _ga_raw['date'].dt.strftime('%Y-W%V')
+            weeks_sorted = sorted(_ga_raw['year_week'].unique())
+            week_users = {}
+            for w in weeks_sorted:
+                week_users[w] = set(_ga_raw[_ga_raw.year_week == w].user_id.unique())
+
+            ga_rows = []
+            all_seen = set()
+            for i, w in enumerate(weeks_sorted):
+                current = week_users[w]
+                prev = week_users[weeks_sorted[i-1]] if i > 0 else set()
+                new = current - all_seen
+                retained = current & prev
+                resurrected = (current & all_seen) - prev - new
+                churned = prev - current
+                ga_rows.append({
+                    "week": w, "new": len(new), "retained": len(retained),
+                    "resurrected": len(resurrected), "churned": -len(churned),
+                    "total_active": len(current)
+                })
+                all_seen |= current
+
+            ga_df = pd.DataFrame(ga_rows)
+
+            fig_ga = go.Figure()
+            fig_ga.add_trace(go.Bar(x=ga_df.week, y=ga_df.new, name="New",
+                marker_color="#22C55E", hovertemplate="New: %{y}<extra></extra>"))
+            fig_ga.add_trace(go.Bar(x=ga_df.week, y=ga_df.retained, name="Retained",
+                marker_color="#3B82F6", hovertemplate="Retained: %{y}<extra></extra>"))
+            fig_ga.add_trace(go.Bar(x=ga_df.week, y=ga_df.resurrected, name="Resurrected",
+                marker_color="#A855F7", hovertemplate="Resurrected: %{y}<extra></extra>"))
+            fig_ga.add_trace(go.Bar(x=ga_df.week, y=ga_df.churned, name="Churned",
+                marker_color=ZOMATO, hovertemplate="Churned: %{y}<extra></extra>"))
+            fig_ga.add_trace(go.Scatter(x=ga_df.week, y=ga_df.total_active, name="Net Active",
+                line=dict(color="#FBBF24", width=2.5), mode="lines+markers",
+                marker=dict(size=5)))
+            fig_ga.update_layout(**plotly_layout(
+                height=340,
+                title=dict(text="Weekly Growth Accounting", font=dict(size=14)),
+                barmode="relative", yaxis_title="Users",
+                legend=dict(bgcolor="rgba(0,0,0,0)", borderwidth=0, font=dict(size=11, color=T['plotly_font']),
+                            orientation="h", y=-0.2, x=0.5, xanchor="center"),
+            ))
+            st.plotly_chart(fig_ga, use_container_width=True)
+
+            last = ga_df.iloc[-1]
+            prev_w = ga_df.iloc[-2] if len(ga_df) > 1 else last
+            net_growth = int(last.new) + int(last.resurrected) + int(last.churned)
+            quick_ratio = sdiv(int(last.new) + int(last.resurrected), abs(int(last.churned))) if int(last.churned) != 0 else float('inf')
+
+            g1, g2, g3, g4 = st.columns(4)
+            g1.metric("Net Growth (Latest Week)", f"{net_growth:+,}",
+                      delta=f"{int(last.new)} new, {abs(int(last.churned))} churned")
+            g2.metric("Quick Ratio", f"{quick_ratio:.2f}" if quick_ratio != float('inf') else "N/A",
+                      help="(New + Resurrected) / Churned. >1 = growing, >4 = elite. Benchmark: top apps sustain 2-4x.")
+            g3.metric("Resurrection Rate", f"{sdiv(int(last.resurrected), abs(int(last.churned)))*100:.0f}%",
+                      help="% of churned users who came back. High = strong re-engagement loops.")
+            g4.metric("Retention Ratio", f"{sdiv(int(last.retained), int(prev_w.total_active))*100:.0f}%",
+                      help="% of last week's users who stayed this week.")
+
         # ── Engagement by Channel ──
         st.markdown("")
         st.markdown('<div class="sh"><h3>Engagement by Acquisition Channel</h3></div>', unsafe_allow_html=True)
